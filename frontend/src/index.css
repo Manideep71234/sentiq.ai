@@ -98,7 +98,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Sidebar */
 .sidebar {
   width: 280px;
-  background: transparent;
+  background: var(--panel-bg);
   border-right: 1px solid var(--panel-border);
   display: flex;
   flex-direction: column;

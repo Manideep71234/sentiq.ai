@@ -8,7 +8,10 @@ export default defineConfig({
     proxy: {
       '/auth': 'http://127.0.0.1:8000',
       '/system': 'http://127.0.0.1:8000',
-      '/chat': 'http://127.0.0.1:8000',
+      '/chat': {
+        target: 'http://127.0.0.1:8000',
+        ws: true
+      },
       '/documents': 'http://127.0.0.1:8000',
       '/email': 'http://127.0.0.1:8000',
       '/calendar': 'http://127.0.0.1:8000',
