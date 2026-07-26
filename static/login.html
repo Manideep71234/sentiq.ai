@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiq.AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=2">
+    <!-- SVG icons -->
+    <style>
+      .icon { width: 18px; height: 18px; fill: currentColor; }
+    </style>
+    <!-- SimpleWebAuthn -->
+    <script src="https://unpkg.com/@simplewebauthn/browser/dist/bundle/index.umd.min.js"></script>
+</head>
+<body>
+    <div id="mouse-tracker"></div>
+    <div id="warp-tunnel" class="warp-tunnel"></div>
+
+    <div class="viewport" id="viewport">
+        <!-- WELCOME SCREEN -->
+        <div class="screen" id="welcome-screen">
+            <div class="welcome-content">
+                <h1>Sentiq<span>.AI</span></h1>
+                <p>The intelligent workspace of the future.</p>
+                <button class="btn-continue" id="continue-btn">Enter Workspace</button>
+            </div>
+        </div>
+
+        <!-- LOGIN SCREEN -->
+        <div class="screen hidden" id="login-screen">
+            <div class="auth-card glass">
+                <h2>Welcome Back</h2>
+                <p>Sign in to your intelligent workspace.</p>
+                
+                <form id="loginForm" class="auth-form">
+                    <div class="input-group">
+                        <label for="username">Email address</label>
+                        <input type="text" id="username" name="username" required autocomplete="username" placeholder="you@example.com">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="••••••••">
+                    </div>
+                    
+                    <div id="errorMessage" class="error-message hidden" style="color: #dc2626; font-size: 13px;"></div>
+                    <div id="successMessage" style="color: #059669; font-size: 13px;" class="hidden"></div>
+                    
+                    <div style="display: flex; gap: 12px; margin-top: 10px;">
+                        <button type="submit" class="btn-primary" id="loginBtn" style="flex: 1;">Sign In</button>
+                        <button type="button" class="btn-secondary" id="registerBtn" style="flex: 1;">Sign Up</button>
+                    </div>
+
+                    <div class="divider" style="margin-top: 20px;"><span>OR</span></div>
+
+                    <div style="display: flex; justify-content: center;">
+                        <button type="button" class="btn-passkey" style="width: 100%;" onclick="passkeyLogin()">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M12 2C9.243 2 7 4.243 7 7v3H6c-1.103 0-2 .897-2 2v8c0 1.103.897 2 2 2h12c1.103 0 2-.897 2-2v-8c0-1.103-.897-2-2-2h-1V7c0-2.757-2.243-5-5-5zm-3 7c0-1.654 1.346-3 3-3s3 1.346 3 3v3H9V9zm3 8c-1.103 0-2-.897-2-2s.897-2 2-2 2 .897 2 2-.897 2-2 2z"/></svg>
+                            Continue with Passkey
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Interactive Mouse Tracker
+        const tracker = document.getElementById('mouse-tracker');
+        document.addEventListener('mousemove', (e) => {
+            tracker.style.left = e.clientX + 'px';
+            tracker.style.top = e.clientY + 'px';
+        });
+
+        // Warp Animation logic
+        const continueBtn = document.getElementById('continue-btn');
+        const viewport = document.getElementById('viewport');
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const loginScreen = document.getElementById('login-screen');
+
+        continueBtn.addEventListener('click', () => {
+            // 1. Zoom deep into the screen and fade body to black
+            viewport.classList.add('warp-active');
+            document.body.classList.add('warp-black');
+            
+            setTimeout(() => {
+                // 2. Swap screens while invisible
+                welcomeScreen.classList.add('hidden');
+                loginScreen.classList.remove('hidden');
+                
+                // Position far back
+                viewport.classList.remove('warp-active');
+                viewport.classList.add('warp-done');
+                
+                // Force reflow
+                void viewport.offsetWidth;
+                
+                // 3. Zoom into login screen and restore background
+                viewport.classList.remove('warp-done');
+                viewport.classList.add('warp-recover');
+                document.body.classList.remove('warp-black');
+                
+                setTimeout(() => {
+                    viewport.classList.remove('warp-recover');
+                }, 1200);
+
+            }, 800);
+        });
+
+        // Standard Login Logic
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            const errorMsg = document.getElementById('errorMessage');
+            
+            btn.textContent = 'Signing in...';
+            btn.disabled = true;
+            errorMsg.classList.add('hidden');
+            
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            
+            try {
+                const response = await fetch('/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    window.location.href = '/';
+                } else {
+                    const resData = await response.json();
+                    errorMsg.textContent = resData.detail || 'Login failed';
+                    errorMsg.classList.remove('hidden');
+                }
+            } catch (err) {
+                errorMsg.textContent = 'Network error. Please try again.';
+                errorMsg.classList.remove('hidden');
+            } finally {
+                btn.textContent = 'Sign In';
+                btn.disabled = false;
+            }
+        });
+
+        // Registration Logic
+        document.getElementById('registerBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('registerBtn');
+            const errorMsg = document.getElementById('errorMessage');
+            const successMsg = document.getElementById('successMessage');
+            
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            
+            if (!usernameInput.value || !passwordInput.value) {
+                errorMsg.textContent = 'Please fill in both fields to sign up.';
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+            
+            btn.textContent = 'Signing up...';
+            btn.disabled = true;
+            errorMsg.classList.add('hidden');
+            successMsg.classList.add('hidden');
+            
+            try {
+                const response = await fetch('/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: usernameInput.value,
+                        password: passwordInput.value
+                    })
+                });
+                
+                const resData = await response.json();
+                
+                if (response.ok) {
+                    successMsg.textContent = resData.message;
+                    successMsg.classList.remove('hidden');
+                } else {
+                    errorMsg.textContent = resData.detail || 'Registration failed';
+                    errorMsg.classList.remove('hidden');
+                }
+            } catch (err) {
+                errorMsg.textContent = 'Network error. Please try again.';
+                errorMsg.classList.remove('hidden');
+            } finally {
+                btn.textContent = 'Sign Up';
+                btn.disabled = false;
+            }
+        });
+
+        // Passkey Implementation
+        const { startRegistration, startAuthentication } = SimpleWebAuthnBrowser;
+
+        // Call this when user wants to add a passkey from within the app
+        async function passkeyRegister() {
+            try {
+                const res = await fetch('/auth/webauthn/register/options');
+                if (!res.ok) throw new Error('Failed to get registration options');
+                const options = await res.json();
+                
+                const attResp = await startRegistration(options);
+                
+                const verifyRes = await fetch('/auth/webauthn/register/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(attResp),
+                });
+                
+                if (verifyRes.ok) {
+                    alert('Passkey registered successfully!');
+                } else {
+                    const err = await verifyRes.json();
+                    alert(`Passkey registration failed: ${err.detail}`);
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Passkey registration error: ' + error.message);
+            }
+        }
+
+        // Call this when user clicks "Continue with Passkey"
+        async function passkeyLogin() {
+            const errorMsg = document.getElementById('errorMessage');
+            errorMsg.classList.add('hidden');
+            
+            try {
+                const res = await fetch('/auth/webauthn/login/options');
+                if (!res.ok) throw new Error('Failed to get login options');
+                const options = await res.json();
+                const challenge_id = options.challenge_id;
+                
+                const asseResp = await startAuthentication(options);
+                
+                const verifyRes = await fetch('/auth/webauthn/login/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        challenge_id: challenge_id,
+                        data: asseResp
+                    }),
+                });
+                
+                if (verifyRes.ok) {
+                    window.location.href = '/';
+                } else {
+                    const err = await verifyRes.json();
+                    errorMsg.textContent = `Passkey login failed: ${err.detail}`;
+                    errorMsg.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error(error);
+                if (error.name !== 'NotAllowedError') {
+                    errorMsg.textContent = 'Passkey authentication failed or was cancelled.';
+                    errorMsg.classList.remove('hidden');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

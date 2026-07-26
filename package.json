@@ -1,0 +1,10 @@
+{
+  "name": "sentiq-ai",
+  "version": "1.0.0",
+  "description": "Root package.json to forward commands to the frontend directory",
+  "scripts": {
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "install-all": "cd frontend && npm install"
+  }
+}

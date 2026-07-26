@@ -1,0 +1,42 @@
+# Data Leakage & Session Pooling Audit
+
+## Goal Description
+Conduct an audit of the application's database session management to prevent data leakage and connection pool exhaustion, specifically targeting long-lived WebSocket connections.
+
+Currently, the WebSocket endpoints (`/chat/ws/{session_id}` and `/research/ws`) use FastAPI's `Depends(get_session)` to inject a single SQLAlchemy/SQLModel database session that remains open for the entire lifespan of the WebSocket connection. 
+
+**Why this is dangerous (Data Leakage & Pool Exhaustion):**
+1. **Connection Starvation:** If a user keeps a chat window open for hours, a database connection is held hostage from the pool, even if they aren't actively sending messages.
+2. **Stale Data (Leakage):** SQLAlchemy sessions cache objects. If a background task or another endpoint updates a `ChatSession` or `User` while the WebSocket is connected, the WebSocket's session will serve stale, cached data, leading to state inconsistencies and potential security/authorization bypasses.
+3. **Memory Leaks:** The session's identity map grows indefinitely with every message sent during a single WebSocket connection.
+
+## Proposed Changes
+
+We will refactor the WebSocket endpoints to use short-lived sessions *per message* rather than a single session per connection.
+
+### `routes/chat.py`
+- **[MODIFY] `routes/chat.py`**:
+  - Remove `db: Session = Depends(get_session)` from the `websocket_chat` route signature.
+  - Inside the `while True:` loop, implement a `with Session(engine) as db:` context manager to spin up a fresh session strictly for the duration of processing an incoming message.
+  - Refactor `get_ws_user` to accept the engine and create its own short-lived session for the initial handshake auth.
+
+### `routes/research.py`
+- **[MODIFY] `routes/research.py`**:
+  - Apply the exact same short-lived session context manager approach to `websocket_research`.
+  - Remove the global `db` dependency from the websocket parameter list.
+
+### `core/database.py`
+- **[MODIFY] `core/database.py`**:
+  - Ensure the `engine` object is cleanly exported so that `routes/chat.py` and `routes/research.py` can import it to create manual sessions.
+
+## Verification Plan
+
+### Automated/Manual Verification
+- Run the application and open multiple chat windows simultaneously.
+- Verify that connecting to the chat does not permanently lock the SQLite database or cause `OperationalError: database is locked`.
+- Verify that messages successfully save to the database under the new context manager approach.
+
+## User Review Required
+
+> [!WARNING]  
+> This changes how database connections are handled under the hood. While it prevents data leakage and scaling issues, it requires us to be careful about not sharing SQLAlchemy objects outside of their `with Session` blocks. Please approve this refactoring so we can deploy a much safer connection pooling strategy.
