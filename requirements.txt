@@ -1,6 +1,6 @@
 fastapi
 uvicorn
-sqlmodel==0.0.18
+sqlmodel
 passlib[bcrypt]==1.7.4
 bcrypt<4.0.0
 python-multipart==0.0.9
