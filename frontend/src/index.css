@@ -215,7 +215,13 @@ h1, h2, h3, h4, h5, h6 {
   max-width: 850px;
   margin: 0 auto;
   width: 100%;
-  animation: slideFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: messagePopIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: bottom center;
+}
+
+@keyframes messagePopIn {
+  0% { opacity: 0; transform: translateY(20px) scale(0.95); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .message-user {
@@ -398,6 +404,8 @@ h1, h2, h3, h4, h5, h6 {
   left: 0;
   width: 100%;
   min-width: max-content;
+  max-height: 300px;
+  overflow-y: auto;
   background: var(--panel-bg);
   backdrop-filter: blur(16px);
   border: 1px solid var(--panel-border);

@@ -268,7 +268,7 @@ import json
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
-GOOGLE_REDIRECT_URI = 'http://localhost:8000/auth/google/callback'
+GOOGLE_REDIRECT_URI = os.environ.get('GOOGLE_REDIRECT_URI', 'https://sentiq-ai.vercel.app/auth/google/callback')
 
 @router.get('/google/login')
 def google_login():

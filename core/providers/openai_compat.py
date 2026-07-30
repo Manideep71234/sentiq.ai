@@ -65,32 +65,41 @@ class OpenAICompatProvider(BaseProvider):
                 
                 try:
                     data = json.loads(data_str)
-                    delta = data["choices"][0]["delta"]
                     
-                    if "content" in delta and delta["content"]:
-                        yield {"type": "content", "delta": delta["content"]}
+                    if "error" in data:
+                        error_msg = data["error"].get("message", str(data["error"]))
+                        yield {"error": error_msg}
+                        break
                         
-                    if "tool_calls" in delta:
-                        for tc in delta["tool_calls"]:
-                            idx = tc["index"]
-                            if idx not in tool_calls_buffer:
-                                tool_calls_buffer[idx] = {
-                                    "id": tc.get("id", ""),
-                                    "type": "function",
-                                    "function": {
-                                        "name": tc.get("function", {}).get("name", ""),
-                                        "arguments": tc.get("function", {}).get("arguments", "")
+                    if "choices" in data and len(data["choices"]) > 0:
+                        delta = data["choices"][0].get("delta", {})
+                        
+                        if "content" in delta and delta["content"]:
+                            yield {"type": "content", "delta": delta["content"]}
+                            
+                        if "tool_calls" in delta:
+                            for tc in delta["tool_calls"]:
+                                idx = tc["index"]
+                                if idx not in tool_calls_buffer:
+                                    tool_calls_buffer[idx] = {
+                                        "id": tc.get("id", ""),
+                                        "type": "function",
+                                        "function": {
+                                            "name": tc.get("function", {}).get("name", ""),
+                                            "arguments": tc.get("function", {}).get("arguments", "")
+                                        }
                                     }
-                                }
-                            else:
-                                if "id" in tc and tc["id"]:
-                                    tool_calls_buffer[idx]["id"] += tc["id"]
-                                if "function" in tc:
-                                    if "name" in tc["function"] and tc["function"]["name"]:
-                                        tool_calls_buffer[idx]["function"]["name"] += tc["function"]["name"]
-                                    if "arguments" in tc["function"] and tc["function"]["arguments"]:
-                                        tool_calls_buffer[idx]["function"]["arguments"] += tc["function"]["arguments"]
-                except Exception:
+                                else:
+                                    if "id" in tc and tc["id"]:
+                                        tool_calls_buffer[idx]["id"] += tc["id"]
+                                    if "function" in tc:
+                                        if "name" in tc["function"] and tc["function"]["name"]:
+                                            tool_calls_buffer[idx]["function"]["name"] += tc["function"]["name"]
+                                        if "arguments" in tc["function"] and tc["function"]["arguments"]:
+                                            tool_calls_buffer[idx]["function"]["arguments"] += tc["function"]["arguments"]
+                except Exception as e:
+                    import logging
+                    logging.error(f"Error processing streaming data '{data_str}': {e}")
                     continue
                     
             if tool_calls_buffer:

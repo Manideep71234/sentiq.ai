@@ -52,9 +52,13 @@ async def run_agent_loop(
                 logger.info(f"[(b) Provider API / First-token] took {t3 - t2:.4f} seconds")
                 first_token = True
                 
-            if chunk["type"] == "content":
+            if "error" in chunk:
+                yield {"error": chunk["error"]}
+                break
+                
+            if chunk.get("type") == "content":
                 yield {"type": "content", "content": chunk["delta"]}
-            elif chunk["type"] == "tool_calls":
+            elif chunk.get("type") == "tool_calls":
                 tool_calls = chunk["tool_calls"]
                 
         if not tool_calls:

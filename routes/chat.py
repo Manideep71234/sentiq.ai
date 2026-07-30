@@ -110,7 +110,7 @@ async def websocket_chat(websocket: WebSocket, session_id: int):
             with Session(engine) as db:
                 try:
                     async for chunk in run_agent_loop(session_id, user.id, db, messages, provider_name, model):
-                        if chunk["type"] == "content":
+                        if chunk.get("type") == "content":
                             full_assistant_message += chunk.get("content", "")
                         await websocket.send_json(chunk)
                 except (WebSocketDisconnect, RuntimeError):
@@ -127,7 +127,7 @@ async def websocket_chat(websocket: WebSocket, session_id: int):
                     chat_session.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
                 db.commit()
             
-            await websocket.send_json({"type": "done"})
+            await websocket.send_json({"type": "done", "content": full_assistant_message})
 
         except Exception as e:
             import traceback

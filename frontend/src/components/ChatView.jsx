@@ -13,7 +13,7 @@ export default function ChatView({ isResearch = false }) {
   const [sessionId, setSessionId] = useState(null);
   const [ws, setWs] = useState(null);
   const [provider, setProvider] = useState('openrouter');
-  const [model, setModel] = useState('openrouter/free');
+  const [model, setModel] = useState('openrouter/auto');
   
   // Realtime streaming state
   const [streamingContent, setStreamingContent] = useState('');
@@ -132,6 +132,7 @@ export default function ChatView({ isResearch = false }) {
     };
     
     let currentContent = '';
+    let currentToolLogs = [];
     
     newWs.onmessage = (event) => {
       const data = JSON.parse(event.data);
@@ -140,16 +141,22 @@ export default function ChatView({ isResearch = false }) {
         currentContent += (data.delta || data.content || '');
         setStreamingContent(currentContent);
       } else if (data.type === 'tool_status') {
-        setToolLogs(prev => [...prev, data.status]);
+        currentToolLogs.push(data.status);
+        setToolLogs([...currentToolLogs]);
       } else if (data.type === 'done') {
-        setMessages(prev => [...prev, { role: 'assistant', content: currentContent, toolLogs: [...toolLogs] }]);
+        const finalContent = data.content || currentContent;
+        setMessages(prev => [...prev, { role: 'assistant', content: finalContent, toolLogs: [...currentToolLogs] }]);
         setStreamingContent('');
         setToolLogs([]);
+        currentContent = '';
+        currentToolLogs = [];
         setIsProcessing(false);
         if (isResearch) newWs.close();
       } else if (data.error) {
         setMessages(prev => [...prev, { role: 'assistant', content: `**Error:** ${data.error}`, isError: true }]);
         setIsProcessing(false);
+        currentContent = '';
+        currentToolLogs = [];
         if (isResearch) newWs.close();
       }
     };

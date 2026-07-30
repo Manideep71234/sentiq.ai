@@ -105,7 +105,8 @@ export default function CompareView() {
           currentContent += (data.delta || data.content || '');
           setter(prev => ({ ...prev, content: currentContent }));
         } else if (data.type === 'done') {
-          setter(prev => ({ ...prev, isProcessing: false }));
+          const finalContent = data.content || currentContent;
+          setter(prev => ({ ...prev, content: finalContent, isProcessing: false }));
           ws.close();
         } else if (data.error) {
           setter(prev => ({ ...prev, isProcessing: false, error: data.error }));
@@ -127,6 +128,7 @@ export default function CompareView() {
     
     runModel(leftProvider, leftModel, setLeftState, 'left');
     runModel(rightProvider, rightModel, setRightState, 'right');
+    setInput('');
   };
 
   const handleStop = () => {
@@ -149,17 +151,17 @@ export default function CompareView() {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', padding: '1rem', gap: '1rem', background: 'transparent' }}>
+      <div style={{ flex: 1, display: 'flex', padding: '1rem', gap: '1rem', background: 'transparent' }}>
         
         {/* LEFT PANE */}
-        <div className="glass-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0 }}>
-          <div style={{ padding: '0.75rem', borderBottom: '1px solid var(--panel-border)', display: 'flex', gap: '0.5rem', background: 'transparent' }}>
+        <div className="glass-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'visible', padding: 0, position: 'relative', zIndex: 2 }}>
+          <div style={{ padding: '0.75rem', borderBottom: '1px solid var(--panel-border)', display: 'flex', gap: '0.5rem', background: 'transparent', position: 'relative', zIndex: 10 }}>
             <div className="animate-dropdown" style={{display: 'flex', gap: '0.5rem'}}>
                 <Dropdown value={leftProvider} onChange={setLeftProvider} options={providerOptions} />
                 <Dropdown value={leftModel} onChange={setLeftModel} options={getModelOptions(leftProvider)} />
             </div>
           </div>
-          <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }} className="markdown-body">
+          <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', position: 'relative', zIndex: 1 }} className="markdown-body">
             {leftState.isProcessing && !leftState.content && <ProcessingIndicator />}
             {leftState.error && <p style={{color: 'red'}}>Error: {leftState.error}</p>}
             {!leftState.isProcessing && !leftState.content && !leftState.error && <p style={{color: '#999', textAlign: 'center', marginTop: '2rem'}}>Select models and enter a prompt below.</p>}
@@ -168,14 +170,14 @@ export default function CompareView() {
         </div>
 
         {/* RIGHT PANE */}
-        <div className="glass-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0 }}>
-          <div style={{ padding: '0.75rem', borderBottom: '1px solid var(--panel-border)', display: 'flex', gap: '0.5rem', background: 'transparent' }}>
+        <div className="glass-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'visible', padding: 0, position: 'relative', zIndex: 1 }}>
+          <div style={{ padding: '0.75rem', borderBottom: '1px solid var(--panel-border)', display: 'flex', gap: '0.5rem', background: 'transparent', position: 'relative', zIndex: 10 }}>
             <div className="animate-dropdown" style={{display: 'flex', gap: '0.5rem'}}>
                 <Dropdown value={rightProvider} onChange={setRightProvider} options={providerOptions} />
                 <Dropdown value={rightModel} onChange={setRightModel} options={getModelOptions(rightProvider)} />
             </div>
           </div>
-          <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }} className="markdown-body">
+          <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', position: 'relative', zIndex: 1 }} className="markdown-body">
             {rightState.isProcessing && !rightState.content && <ProcessingIndicator />}
             {rightState.error && <p style={{color: 'red'}}>Error: {rightState.error}</p>}
             {!rightState.isProcessing && !rightState.content && !rightState.error && <p style={{color: '#999', textAlign: 'center', marginTop: '2rem'}}>Select models and enter a prompt below.</p>}
@@ -186,7 +188,7 @@ export default function CompareView() {
       </div>
 
       {/* INPUT AREA */}
-      <div className="chat-input-container" style={{ background: 'transparent', paddingBottom: '2rem' }}>
+      <div className="chat-input-container" style={{ background: 'transparent', paddingBottom: '2rem', position: 'relative', zIndex: 0 }}>
         <form className="chat-form" onSubmit={handleSubmit}>
           <textarea
             className="chat-input"

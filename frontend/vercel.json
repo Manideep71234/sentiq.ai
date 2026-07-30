@@ -1,8 +1,14 @@
 {
   "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
+    { "source": "/auth/(.*)", "destination": "https://sentiq-ai.onrender.com/auth/$1" },
+    { "source": "/system/(.*)", "destination": "https://sentiq-ai.onrender.com/system/$1" },
+    { "source": "/chat/(.*)", "destination": "https://sentiq-ai.onrender.com/chat/$1" },
+    { "source": "/documents/(.*)", "destination": "https://sentiq-ai.onrender.com/documents/$1" },
+    { "source": "/email/(.*)", "destination": "https://sentiq-ai.onrender.com/email/$1" },
+    { "source": "/calendar/(.*)", "destination": "https://sentiq-ai.onrender.com/calendar/$1" },
+    { "source": "/notes/(.*)", "destination": "https://sentiq-ai.onrender.com/notes/$1" },
+    { "source": "/tasks/(.*)", "destination": "https://sentiq-ai.onrender.com/tasks/$1" },
+    { "source": "/scheduled-tasks/(.*)", "destination": "https://sentiq-ai.onrender.com/scheduled-tasks/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
