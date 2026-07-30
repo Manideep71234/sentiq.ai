@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send } from 'lucide-react';
+import { Send, Square } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 import Dropdown from './Dropdown';
@@ -15,6 +15,8 @@ export default function CompareView() {
   const [rightProvider, setRightProvider] = useState('openrouter');
   const [rightModel, setRightModel] = useState('google/gemini-2.0-flash-exp:free');
   const [rightState, setRightState] = useState({ content: '', isProcessing: false, error: null });
+
+  const wsRefs = useRef({ left: null, right: null });
 
   const providerOptions = [
     { value: 'openrouter', label: 'OpenRouter' },
@@ -62,7 +64,7 @@ export default function CompareView() {
     return { __html: DOMPurify.sanitize(marked.parse(content || '')) };
   };
 
-  const runModel = async (provider, model, setter) => {
+  const runModel = async (provider, model, setter, side) => {
     setter({ content: '', isProcessing: true, error: null });
     
     try {
@@ -73,6 +75,7 @@ export default function CompareView() {
 
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const ws = new WebSocket(`${protocol}//${window.location.host}/chat/ws/${sessionId}`);
+      wsRefs.current[side] = ws;
       
       ws.onopen = () => {
         ws.send(JSON.stringify({ message: input, provider, model }));
@@ -106,8 +109,19 @@ export default function CompareView() {
     e.preventDefault();
     if (!input.trim() || leftState.isProcessing || rightState.isProcessing) return;
     
-    runModel(leftProvider, leftModel, setLeftState);
-    runModel(rightProvider, rightModel, setRightState);
+    runModel(leftProvider, leftModel, setLeftState, 'left');
+    runModel(rightProvider, rightModel, setRightState, 'right');
+  };
+
+  const handleStop = () => {
+    if (wsRefs.current.left) {
+      wsRefs.current.left.close();
+      setLeftState(prev => ({ ...prev, isProcessing: false }));
+    }
+    if (wsRefs.current.right) {
+      wsRefs.current.right.close();
+      setRightState(prev => ({ ...prev, isProcessing: false }));
+    }
   };
 
   const handleKeyDown = (e) => {
@@ -186,9 +200,15 @@ export default function CompareView() {
             <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
               Use Shift + Enter for new line
             </span>
-            <button type="submit" className="send-btn" disabled={!input.trim() || leftState.isProcessing || rightState.isProcessing}>
-              <Send size={16} />
-            </button>
+            {leftState.isProcessing || rightState.isProcessing ? (
+              <button type="button" className="send-btn stop-btn" onClick={handleStop} title="Stop Generation" style={{ backgroundColor: 'var(--error-color)' }}>
+                <Square size={16} fill="currentColor" />
+              </button>
+            ) : (
+              <button type="submit" className="send-btn" disabled={!input.trim()}>
+                <Send size={16} />
+              </button>
+            )}
           </div>
         </form>
       </div>

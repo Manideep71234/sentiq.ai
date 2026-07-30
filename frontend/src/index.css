@@ -563,3 +563,13 @@ h1, h2, h3, h4, h5, h6 {
   0% { background-position: -100% 0; }
   100% { background-position: 100% 0; }
 }
+
+.fade-in {
+  animation: blurEntryMain 1.2s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+}
+
+@keyframes blurEntryMain {
+  0% { filter: blur(20px); opacity: 0; transform: scale(1.02); }
+  100% { filter: blur(0px); opacity: 1; transform: scale(1); }
+}
+

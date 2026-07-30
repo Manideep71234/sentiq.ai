@@ -135,7 +135,7 @@ export default function SettingsScheduledTasks({ user }) {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', borderLeft: '1px solid var(--panel-border)', paddingLeft: '2rem', overflowY: 'auto' }}>
           <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}><Inbox /> Results Inbox</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {results.map(r => (
+            {Array.isArray(results) && results.map(r => (
               <div key={r.id} className="glass-panel" style={{ padding: '1rem', borderRadius: '8px', border: '1px solid var(--panel-border)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                   <strong style={{ color: 'var(--accent-color)' }}>{r.task_name}</strong>

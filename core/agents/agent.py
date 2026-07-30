@@ -1,10 +1,14 @@
 import json
+import time
+import logging
 from typing import AsyncGenerator, Dict, Any, List
 from sqlmodel import Session, select
 from core.providers import get_provider
 from core.models import MemoryEntry, Skill
 from .tools import BUILTIN_TOOLS, execute_tool
 from .mcp_client import mcp_manager
+
+logger = logging.getLogger(__name__)
 
 async def run_agent_loop(
     session_id: int,
@@ -18,8 +22,11 @@ async def run_agent_loop(
     provider = get_provider(provider_name)
     
     # 1. Inject memories and skills into system prompt
+    t0 = time.time()
     memories = db.exec(select(MemoryEntry).where(MemoryEntry.user_id == user_id)).all()
     skills = db.exec(select(Skill).where(Skill.user_id == user_id)).all()
+    t1 = time.time()
+    logger.info(f"[(a) DB queries for memory/skills] took {t1 - t0:.4f} seconds")
     
     system_prompt = "You are Sentiq.AI, an advanced intelligent agent.\n"
     if memories:
@@ -37,7 +44,14 @@ async def run_agent_loop(
     for _ in range(MAX_ITERATIONS):
         tool_calls = []
         
+        t2 = time.time()
+        first_token = False
         async for chunk in provider.generate_stream(full_messages, model, all_tools):
+            if not first_token:
+                t3 = time.time()
+                logger.info(f"[(b) Provider API / First-token] took {t3 - t2:.4f} seconds")
+                first_token = True
+                
             if chunk["type"] == "content":
                 yield {"type": "content", "content": chunk["delta"]}
             elif chunk["type"] == "tool_calls":

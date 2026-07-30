@@ -108,7 +108,14 @@ def change_password(
 
 @router.get("/me")
 def get_me(user: User = Depends(get_current_user)):
-    return {"id": user.id, "username": user.username, "is_admin": user.is_admin}
+    return {
+        "id": user.id, 
+        "username": user.username, 
+        "is_admin": user.is_admin,
+        "profile_pic": user.profile_pic,
+        "full_name": user.full_name,
+        "auth_provider": user.auth_provider
+    }
 
 from webauthn import (
     generate_registration_options,
@@ -252,3 +259,188 @@ async def webauthn_login_verify(request: Request, response: Response, db: Sessio
         del webauthn_challenges[f"auth_{challenge_id}"]
         
     return {"message": "Logged in via Passkey!"}
+
+import os
+import httpx
+from fastapi.responses import RedirectResponse
+import json
+
+from dotenv import load_dotenv
+load_dotenv(override=True)
+
+GOOGLE_REDIRECT_URI = 'http://localhost:8000/auth/google/callback'
+
+@router.get('/google/login')
+def google_login():
+    GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
+    
+    if not GOOGLE_CLIENT_ID:
+        raise HTTPException(status_code=500, detail='Google Client ID not configured')
+    
+    scopes = [
+        'openid',
+        'email',
+        'profile',
+        'https://www.googleapis.com/auth/calendar',
+        'https://mail.google.com/'
+    ]
+    
+    auth_url = (
+        f'https://accounts.google.com/o/oauth2/v2/auth'
+        f'?client_id={GOOGLE_CLIENT_ID}'
+        f'&redirect_uri={GOOGLE_REDIRECT_URI}'
+        f'&response_type=code'
+        f'&scope={"%20".join(scopes)}'
+        f'&access_type=offline'
+        f'&prompt=consent'
+    )
+    return RedirectResponse(auth_url)
+
+@router.get('/google/callback')
+async def google_callback(code: str, response: Response, db: Session = Depends(get_session)):
+    GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
+    GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
+
+    if not code:
+        raise HTTPException(status_code=400, detail='Authorization code not found')
+        
+    token_url = 'https://oauth2.googleapis.com/token'
+    data = {
+        'code': code,
+        'client_id': GOOGLE_CLIENT_ID,
+        'client_secret': GOOGLE_CLIENT_SECRET,
+        'redirect_uri': GOOGLE_REDIRECT_URI,
+        'grant_type': 'authorization_code'
+    }
+    
+    async with httpx.AsyncClient() as client:
+        token_response = await client.post(token_url, data=data)
+        token_json = token_response.json()
+        
+        if 'error' in token_json:
+            raise HTTPException(status_code=400, detail=f"Google Auth Error: {token_json.get('error_description', token_json.get('error'))}")
+            
+        access_token = token_json.get('access_token')
+        refresh_token = token_json.get('refresh_token')
+        expires_in = token_json.get('expires_in', 3599)
+        
+        # Get user info
+        user_info_url = 'https://www.googleapis.com/oauth2/v2/userinfo'
+        headers = {'Authorization': f'Bearer {access_token}'}
+        user_info_response = await client.get(user_info_url, headers=headers)
+        user_info = user_info_response.json()
+        
+    email = user_info.get('email')
+    if not email:
+        raise HTTPException(status_code=400, detail='Email not provided by Google')
+        
+    target_email = 'chandamanideeo71234@gmail.com'
+    
+    # Check if user with this email exists
+    user = db.exec(select(User).where(User.email == email)).first()
+    if not user:
+        # Check if the username matches the email (legacy or combined)
+        user = db.exec(select(User).where(User.username == email)).first()
+        
+    if not user and email == target_email:
+        # Check if admin exists to link
+        user = db.exec(select(User).where(User.username == 'admin')).first()
+        if user:
+            user.email = email
+            user.auth_provider = 'google'
+            db.add(user)
+            
+    full_name = user_info.get('name')
+    profile_pic = user_info.get('picture')
+    
+    if not user:
+        # Create new user
+        user = User(
+            username=email.split('@')[0] + '_google',
+            email=email,
+            auth_provider='google',
+            password_hash=get_password_hash(access_token[:10]), # Dummy hash for google users
+            full_name=full_name,
+            profile_pic=profile_pic
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        
+    # Update email and profile in user model if not set or outdated
+    updated = False
+    if user.email != email:
+        user.email = email
+        user.auth_provider = 'google'
+        updated = True
+    if full_name and user.full_name != full_name:
+        user.full_name = full_name
+        updated = True
+    if profile_pic and user.profile_pic != profile_pic:
+        user.profile_pic = profile_pic
+        updated = True
+        
+    if updated:
+        db.add(user)
+        db.commit()
+    # Save Calendar Tokens
+    from core.models import CalendarAccount
+    calendar_account = db.exec(select(CalendarAccount).where(CalendarAccount.user_id == user.id)).first()
+    if not calendar_account:
+        calendar_account = CalendarAccount(user_id=user.id, caldav_url="", username="", encrypted_password="")
+        db.add(calendar_account)
+    
+    calendar_account.access_token = access_token
+    if refresh_token:
+        calendar_account.refresh_token = refresh_token
+    calendar_account.token_expires_at = int(datetime.now(timezone.utc).timestamp()) + expires_in
+    
+    # Save Email Tokens
+    from core.models import EmailAccount
+    email_account = db.exec(select(EmailAccount).where(EmailAccount.user_id == user.id)).first()
+    if not email_account:
+        email_account = EmailAccount(
+            user_id=user.id,
+            imap_host='imap.gmail.com',
+            smtp_host='smtp.gmail.com',
+            username=email,
+            encrypted_password=""
+        )
+        db.add(email_account)
+        
+    email_account.access_token = access_token
+    if refresh_token:
+        email_account.refresh_token = refresh_token
+    email_account.token_expires_at = int(datetime.now(timezone.utc).timestamp()) + expires_in
+    email_account.username = email
+    
+    db.commit()
+    
+    # Create Session
+    session_id = generate_session_id()
+    expires_at = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=7)
+    session_db = SessionModel(
+        session_id=session_id,
+        user_id=user.id,
+        expires_at=expires_at
+    )
+    db.add(session_db)
+    db.commit()
+    
+    # Set Cookie and Redirect to App
+    frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:5173/')
+    response = RedirectResponse(url=frontend_url)
+    
+    cookie_expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+    
+    response.set_cookie(
+        key='session_id',
+        value=session_id,
+        httponly=True,
+        samesite='lax',
+        secure=False, # Set true for prod
+        expires=cookie_expires_at
+    )
+    
+    return response
+

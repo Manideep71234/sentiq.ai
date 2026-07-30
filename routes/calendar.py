@@ -38,36 +38,61 @@ def save_account(data: dict, user: User = Depends(get_current_user), db: Session
     return {"status": "success"}
 
 @router.get("/events")
-def get_events(user: User = Depends(get_current_user), db: Session = Depends(get_session)):
+async def get_events(user: User = Depends(get_current_user), db: Session = Depends(get_session)):
     account = db.exec(select(CalendarAccount).where(CalendarAccount.user_id == user.id)).first()
     if not account:
         raise HTTPException(status_code=400, detail="Calendar account not configured")
         
+    now = datetime.now()
+    start = now - timedelta(days=30)
+    end = now + timedelta(days=30)
+        
     try:
-        password = decrypt_string(account.encrypted_password)
-        # Fetch events for a +/- 30 day window to avoid overloading
-        now = datetime.now()
-        start = now - timedelta(days=30)
-        end = now + timedelta(days=30)
-        events = fetch_events(account.caldav_url, account.username, password, start_date=start, end_date=end)
-        return events
+        if account.access_token:
+            # Use Google Calendar
+            from core.integrations.google_calendar_client import GoogleCalendarClient
+            client = GoogleCalendarClient(account.access_token)
+            events = await client.fetch_events(start_date=start, end_date=end)
+            return events
+        else:
+            # Fallback to CalDAV
+            password = decrypt_string(account.encrypted_password)
+            events = fetch_events(account.caldav_url, account.username, password, start_date=start, end_date=end)
+            return events
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/events")
-def add_event(data: dict, user: User = Depends(get_current_user), db: Session = Depends(get_session)):
+async def add_event(data: dict, user: User = Depends(get_current_user), db: Session = Depends(get_session)):
     account = db.exec(select(CalendarAccount).where(CalendarAccount.user_id == user.id)).first()
     if not account:
         raise HTTPException(status_code=400, detail="Calendar account not configured")
         
     try:
-        password = decrypt_string(account.encrypted_password)
+        start_time = datetime.fromisoformat(data["start_time"].replace("Z", "+00:00"))
+        end_time = datetime.fromisoformat(data["end_time"].replace("Z", "+00:00"))
         
-        # Expecting ISO strings from the frontend
-        start = datetime.fromisoformat(data["start"].replace('Z', '+00:00'))
-        end = datetime.fromisoformat(data["end"].replace('Z', '+00:00'))
-        
-        create_event(account.caldav_url, account.username, password, start, end, data["summary"], data.get("description", ""))
+        if account.access_token:
+            from core.integrations.google_calendar_client import GoogleCalendarClient
+            client = GoogleCalendarClient(account.access_token)
+            await client.create_event(
+                summary=data["summary"],
+                start_time=start_time,
+                end_time=end_time,
+                description=data.get("description", ""),
+                location=data.get("location", "")
+            )
+        else:
+            password = decrypt_string(account.encrypted_password)
+            create_event(
+                account.caldav_url, 
+                account.username, 
+                password,
+                summary=data["summary"],
+                start_time=start_time,
+                end_time=end_time,
+                description=data.get("description", "")
+            )
         return {"status": "success"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

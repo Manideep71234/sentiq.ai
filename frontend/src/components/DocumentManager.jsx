@@ -69,7 +69,7 @@ export default function DocumentManager({ user }) {
         </div>
         
         <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem' }}>
-          {documents.map(doc => (
+          {Array.isArray(documents) && documents.map(doc => (
             <div 
               key={doc.id}
               onClick={() => { setActiveDoc(doc); setShowVersions(false); }}

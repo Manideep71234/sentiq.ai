@@ -69,7 +69,7 @@ async def lifespan(app: FastAPI):
             
     yield
 
-app = FastAPI(lifespan=lifespan, title="Terminator.AI")
+app = FastAPI(lifespan=lifespan, title="Sentiq.AI")
 app.state.limiter = limiter
 
 # Exception handler for Rate Limits
@@ -85,7 +85,9 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
 import os
 from starlette.middleware.sessions import SessionMiddleware
 
-app.add_middleware(SessionMiddleware, secret_key=os.environ.get("JWT_SECRET", "changeme_in_production"))
+from core.config import settings
+
+app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 app.add_middleware(SlowAPIMiddleware)
 
 if os.path.exists("frontend/dist"):

@@ -172,13 +172,16 @@ Output ONLY the final replacement text. Do not output markdown code blocks unles
             messages = [{"role": "user", "content": prompt}]
             provider = get_provider(provider_name)
             
-            async for chunk in provider.stream(messages, model):
-                if chunk.choices and len(chunk.choices) > 0:
-                    delta = chunk.choices[0].delta.content or ""
-                    if delta:
-                        await websocket.send_json({"type": "content", "content": delta})
-                        
-            await websocket.send_json({"type": "done"})
+            try:
+                async for chunk in provider.stream(messages, model):
+                    if chunk.choices and len(chunk.choices) > 0:
+                        delta = chunk.choices[0].delta.content or ""
+                        if delta:
+                            await websocket.send_json({"type": "content", "content": delta})
+                            
+                await websocket.send_json({"type": "done"})
+            except (WebSocketDisconnect, RuntimeError):
+                pass
 
     except WebSocketDisconnect:
         pass

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Send } from 'lucide-react';
+import { Send, Square } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 import ToolLog from './ToolLog';
@@ -175,6 +175,18 @@ export default function ChatView({ isResearch = false }) {
     }
   };
 
+  const handleStop = () => {
+    if (ws) {
+      ws.close();
+      if (streamingContent || toolLogs.length > 0 || true) {
+        setMessages(prev => [...prev, { role: 'assistant', content: streamingContent, toolLogs: [...toolLogs], stopped: true }]);
+      }
+      setStreamingContent('');
+      setToolLogs([]);
+      setIsProcessing(false);
+    }
+  };
+
   const renderContent = (content) => {
     return { __html: DOMPurify.sanitize(marked.parse(content || '')) };
   };
@@ -219,6 +231,11 @@ export default function ChatView({ isResearch = false }) {
                 style={msg.isError ? { color: 'red' } : {}}
                 dangerouslySetInnerHTML={renderContent(msg.content)} 
               />
+              {msg.stopped && (
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Square size={12} fill="currentColor" opacity={0.6} /> <i>You stopped this response.</i>
+                </div>
+              )}
             </div>
           </div>
         ))}
@@ -261,9 +278,15 @@ export default function ChatView({ isResearch = false }) {
             <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
               Use Shift + Enter for new line
             </span>
-            <button type="submit" className="send-btn" disabled={!input.trim() || isProcessing}>
-              <Send size={16} />
-            </button>
+            {isProcessing ? (
+              <button type="button" className="send-btn stop-btn" onClick={handleStop} title="Stop Generation" style={{ backgroundColor: 'var(--error-color)' }}>
+                <Square size={16} fill="currentColor" />
+              </button>
+            ) : (
+              <button type="submit" className="send-btn" disabled={!input.trim()}>
+                <Send size={16} />
+              </button>
+            )}
           </div>
         </form>
       </div>

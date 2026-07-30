@@ -1,8 +1,9 @@
 import json
+import time
 from datetime import datetime, timezone
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException, status
 from sqlmodel import Session, select
-from core.database import get_session
+from core.database import get_session, engine
 from core.models import User, SessionModel, ChatSession, ChatMessage
 from core.agents.agent import run_agent_loop
 from core.auth import get_current_user
@@ -49,8 +50,10 @@ async def get_ws_user(websocket: WebSocket) -> User | None:
 
 @router.websocket("/ws/{session_id}")
 async def websocket_chat(websocket: WebSocket, session_id: int):
-    from core.database import engine
+    print(f"DEBUG: New websocket connection for session {session_id}")
     await websocket.accept()
+    print(f"DEBUG: Accepted websocket connection for session {session_id}")
+    from core.database import engine
     
     user = await get_ws_user(websocket)
     if not user:
@@ -68,6 +71,7 @@ async def websocket_chat(websocket: WebSocket, session_id: int):
 
     while True:
         try:
+            t_recv = time.time()
             data = await websocket.receive_text()
         except WebSocketDisconnect:
             break
@@ -97,15 +101,21 @@ async def websocket_chat(websocket: WebSocket, session_id: int):
                         m["tool_calls"] = json.loads(h.tool_calls)
                     messages.append(m)
 
-            # Run agent loop (pass db context or let agent loop handle it)
-            # wait, `run_agent_loop` takes `db`. Let's pass a fresh short-lived session inside run_agent_loop?
-            # Or we can wrap run_agent_loop in a session. Let's wrap it in a session context for safety, since the generator yields.
+            t_db_done = time.time()
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.info(f"[(c) WebSocket message handling & History DB load] took {t_db_done - t_recv:.4f} seconds")
+
             full_assistant_message = ""
             with Session(engine) as db:
-                async for chunk in run_agent_loop(session_id, user.id, db, messages, provider_name, model):
-                    if chunk["type"] == "content":
-                        full_assistant_message += chunk.get("content", "")
-                    await websocket.send_json(chunk)
+                try:
+                    async for chunk in run_agent_loop(session_id, user.id, db, messages, provider_name, model):
+                        if chunk["type"] == "content":
+                            full_assistant_message += chunk.get("content", "")
+                        await websocket.send_json(chunk)
+                except (WebSocketDisconnect, RuntimeError):
+                    # Client disconnected or aborted stream
+                    pass
 
                 # Save assistant message
                 if full_assistant_message:
@@ -120,4 +130,9 @@ async def websocket_chat(websocket: WebSocket, session_id: int):
             await websocket.send_json({"type": "done"})
 
         except Exception as e:
-            await websocket.send_json({"error": str(e)})
+            import traceback
+            traceback.print_exc()
+            try:
+                await websocket.send_json({"error": str(e)})
+            except:
+                pass

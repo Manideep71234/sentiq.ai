@@ -252,7 +252,7 @@ export default function EmailManager({ user }) {
         </div>
         
         <div style={{ flex: 1, overflowY: 'auto', padding: '0.75rem' }}>
-          {threads.map(t => (
+          {Array.isArray(threads) && threads.map(t => (
             <div 
               key={t.thread_id}
               onClick={() => { setActiveThread(t); setDraft(''); }}

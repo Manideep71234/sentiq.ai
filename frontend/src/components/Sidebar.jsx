@@ -52,11 +52,28 @@ export default function Sidebar({ activeView, setActiveView, user, toggleTheme, 
       </nav>
       
       <div className="sidebar-footer">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', padding: '0 0.5rem' }}>
-          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent-color)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
-            {user.username.charAt(0).toUpperCase()}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem', padding: '0 0.5rem' }}>
+          {user.profile_pic ? (
+            <img 
+              src={user.profile_pic} 
+              alt="Profile" 
+              style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }} 
+            />
+          ) : (
+            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--accent-color)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+              {user.username.charAt(0).toUpperCase()}
+            </div>
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-color)', lineHeight: '1.2' }}>
+              {user.full_name || user.username}
+            </span>
+            {user.auth_provider && (
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'capitalize' }}>
+                {user.auth_provider}
+              </span>
+            )}
           </div>
-          <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>{user.username}</span>
         </div>
         <button className="nav-item" onClick={handleLogout} style={{ color: 'var(--text-secondary)' }}>
           <LogOut size={18} />

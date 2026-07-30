@@ -73,8 +73,27 @@ export default function AIFloatingToolbar({ editorRef, docId, onContentChange })
     suggestionNode.style.marginLeft = '0.5rem';
     suggestionNode.style.fontWeight = '500';
     
+    // Create stop button
+    const stopBtn = document.createElement('button');
+    stopBtn.innerHTML = '⏹';
+    stopBtn.style.background = '#ef4444';
+    stopBtn.style.color = 'white';
+    stopBtn.style.border = 'none';
+    stopBtn.style.borderRadius = '3px';
+    stopBtn.style.cursor = 'pointer';
+    stopBtn.style.marginLeft = '0.5rem';
+    stopBtn.title = "Stop Generation";
+    stopBtn.onclick = () => {
+      if (ws) ws.close();
+      setIsProcessing(false);
+      diffContainer.replaceWith(document.createTextNode(originalText));
+      onContentChange(editorRef.current.innerHTML);
+      setDiffNode(null);
+    };
+    
     diffContainer.appendChild(originalNode);
     diffContainer.appendChild(suggestionNode);
+    diffContainer.appendChild(stopBtn);
     
     selectionRange.deleteContents();
     selectionRange.insertNode(diffContainer);
@@ -107,6 +126,7 @@ export default function AIFloatingToolbar({ editorRef, docId, onContentChange })
       } else if (data.type === 'done') {
         setIsProcessing(false);
         ws.close();
+        stopBtn.remove();
         
         // Show accept/reject buttons
         const actionNode = document.createElement('span');

@@ -8,6 +8,9 @@ export default defineConfig({
     proxy: {
       '/auth': 'http://127.0.0.1:8000',
       '/system': 'http://127.0.0.1:8000',
+      '/login': 'http://127.0.0.1:8000',
+      '/logout': 'http://127.0.0.1:8000',
+      '/static': 'http://127.0.0.1:8000',
       '/chat': {
         target: 'http://127.0.0.1:8000',
         ws: true

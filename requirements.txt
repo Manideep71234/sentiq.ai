@@ -19,3 +19,6 @@ apscheduler
 webauthn
 authlib
 itsdangerous
+authlib
+httpx
+

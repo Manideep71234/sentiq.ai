@@ -5,8 +5,12 @@ from datetime import datetime, timezone
 class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     username: str = Field(unique=True, index=True)
+    email: Optional[str] = Field(default=None, unique=True, index=True)
+    auth_provider: str = Field(default="local")
     password_hash: str
     is_admin: bool = Field(default=False)
+    profile_pic: Optional[str] = Field(default=None)
+    full_name: Optional[str] = Field(default=None)
 
 class PasskeyCredential(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -100,9 +104,12 @@ class EmailThreadCache(SQLModel, table=True):
 class CalendarAccount(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id", index=True)
-    caldav_url: str
-    username: str
-    encrypted_password: str
+    caldav_url: Optional[str] = None
+    username: Optional[str] = None
+    encrypted_password: Optional[str] = None
+    access_token: Optional[str] = None
+    refresh_token: Optional[str] = None
+    token_expires_at: Optional[int] = None
 
 class Note(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

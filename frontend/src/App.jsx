@@ -65,15 +65,31 @@ function App() {
             </header>
           )}
           
-          <div key={activeView} className="view-transition" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            {activeView === 'chat' && <ChatView />}
-            {activeView === 'research' && <ChatView isResearch={true} />}
-            {activeView === 'documents' && <DocumentManager user={user} />}
-            {activeView === 'email' && <EmailManager user={user} />}
-            {activeView === 'notes' && <NotesTasksManager user={user} />}
-            {activeView === 'calendar' && <CalendarManager user={user} />}
-            {activeView === 'settings' && <SettingsScheduledTasks user={user} />}
-            {activeView === 'compare' && <CompareView />}
+          <div className="view-transition" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div style={{ display: activeView === 'chat' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
+              <ChatView />
+            </div>
+            <div style={{ display: activeView === 'research' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
+              <ChatView isResearch={true} />
+            </div>
+            <div style={{ display: activeView === 'documents' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
+              <DocumentManager user={user} />
+            </div>
+            <div style={{ display: activeView === 'email' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
+              <EmailManager user={user} />
+            </div>
+            <div style={{ display: activeView === 'notes' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
+              <NotesTasksManager user={user} />
+            </div>
+            <div style={{ display: activeView === 'calendar' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
+              <CalendarManager user={user} />
+            </div>
+            <div style={{ display: activeView === 'settings' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
+              <SettingsScheduledTasks user={user} />
+            </div>
+            <div style={{ display: activeView === 'compare' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
+              <CompareView />
+            </div>
           </div>
         </main>
       </div>
