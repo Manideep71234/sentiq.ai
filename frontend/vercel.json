@@ -9,6 +9,7 @@
     { "source": "/notes/(.*)", "destination": "https://sentiq-ai.onrender.com/notes/$1" },
     { "source": "/tasks/(.*)", "destination": "https://sentiq-ai.onrender.com/tasks/$1" },
     { "source": "/scheduled-tasks/(.*)", "destination": "https://sentiq-ai.onrender.com/scheduled-tasks/$1" },
+    { "source": "/login", "destination": "https://sentiq-ai.onrender.com/login" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
