@@ -28,6 +28,29 @@ export default function ChatView({ isResearch = false }) {
     { value: 'ollama', label: 'Ollama (Local)' }
   ];
 
+  const [openRouterModels, setOpenRouterModels] = useState([
+    { value: 'openrouter/auto', label: 'Auto Best Model (OpenRouter)' }
+  ]);
+
+  useEffect(() => {
+    fetch('https://openrouter.ai/api/v1/models')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.data) {
+          // Filter models that are completely free (prompt=0 and completion=0)
+          const freeModels = data.data
+            .filter(m => m.pricing && m.pricing.prompt === "0" && m.pricing.completion === "0")
+            .map(m => ({ value: m.id, label: `${m.name} (Free)` }));
+            
+          setOpenRouterModels([
+            { value: 'openrouter/auto', label: 'Auto Best Model' },
+            ...freeModels
+          ]);
+        }
+      })
+      .catch(err => console.error("Failed to fetch OpenRouter models:", err));
+  }, []);
+
   const getModelOptions = (prov) => {
     if (prov === 'ollama') {
       return [
@@ -40,23 +63,17 @@ export default function ChatView({ isResearch = false }) {
         { value: 'llama3-70b-8192', label: 'Llama 3 70B (Groq)' }
       ];
     } else {
-      return [
-        { value: 'openrouter/free', label: 'Auto Free Model (OpenRouter)' },
-        { value: 'deepseek/deepseek-chat:free', label: 'DeepSeek V3 (Free)' },
-        { value: 'meta-llama/llama-3.1-8b-instruct:free', label: 'Llama 3.1 8B (Free)' },
-        { value: 'google/gemini-2.0-flash-exp:free', label: 'Gemini 2.0 Flash (Free)' },
-        { value: 'mistralai/mistral-nemo:free', label: 'Mistral Nemo (Free)' }
-      ];
+      return openRouterModels;
     }
   };
 
   // Update model when provider changes to ensure valid model is selected
   useEffect(() => {
     const opts = getModelOptions(provider);
-    if (!opts.find(o => o.value === model)) {
+    if (opts.length > 0 && !opts.find(o => o.value === model)) {
       setModel(opts[0].value);
     }
-  }, [provider]);
+  }, [provider, openRouterModels]);
 
   // ... (keep the rest of the hooks identical)
 

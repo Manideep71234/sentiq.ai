@@ -9,11 +9,11 @@ export default function CompareView() {
   const [input, setInput] = useState('');
   
   const [leftProvider, setLeftProvider] = useState('openrouter');
-  const [leftModel, setLeftModel] = useState('meta-llama/llama-3.1-8b-instruct:free');
+  const [leftModel, setLeftModel] = useState('openrouter/auto');
   const [leftState, setLeftState] = useState({ content: '', isProcessing: false, error: null });
 
   const [rightProvider, setRightProvider] = useState('openrouter');
-  const [rightModel, setRightModel] = useState('google/gemini-2.0-flash-exp:free');
+  const [rightModel, setRightModel] = useState('openrouter/auto');
   const [rightState, setRightState] = useState({ content: '', isProcessing: false, error: null });
 
   const wsRefs = useRef({ left: null, right: null });
@@ -23,6 +23,28 @@ export default function CompareView() {
     { value: 'groq', label: 'Groq' },
     { value: 'ollama', label: 'Ollama (Local)' }
   ];
+
+  const [openRouterModels, setOpenRouterModels] = useState([
+    { value: 'openrouter/auto', label: 'Auto Best Model (OpenRouter)' }
+  ]);
+
+  useEffect(() => {
+    fetch('https://openrouter.ai/api/v1/models')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.data) {
+          const freeModels = data.data
+            .filter(m => m.pricing && m.pricing.prompt === "0" && m.pricing.completion === "0")
+            .map(m => ({ value: m.id, label: `${m.name} (Free)` }));
+            
+          setOpenRouterModels([
+            { value: 'openrouter/auto', label: 'Auto Best Model' },
+            ...freeModels
+          ]);
+        }
+      })
+      .catch(err => console.error("Failed to fetch OpenRouter models:", err));
+  }, []);
 
   const getModelOptions = (prov) => {
     if (prov === 'ollama') {
@@ -36,29 +58,23 @@ export default function CompareView() {
         { value: 'llama3-70b-8192', label: 'Llama 3 70B (Groq)' }
       ];
     } else {
-      return [
-        { value: 'openrouter/free', label: 'Auto Free Model (OpenRouter)' },
-        { value: 'deepseek/deepseek-chat:free', label: 'DeepSeek V3 (Free)' },
-        { value: 'meta-llama/llama-3.1-8b-instruct:free', label: 'Llama 3.1 8B (Free)' },
-        { value: 'google/gemini-2.0-flash-exp:free', label: 'Gemini 2.0 Flash (Free)' },
-        { value: 'mistralai/mistral-nemo:free', label: 'Mistral Nemo (Free)' }
-      ];
+      return openRouterModels;
     }
   };
 
   useEffect(() => {
     const opts = getModelOptions(leftProvider);
-    if (!opts.find(o => o.value === leftModel)) {
+    if (opts.length > 0 && !opts.find(o => o.value === leftModel)) {
       setLeftModel(opts[0].value);
     }
-  }, [leftProvider]);
+  }, [leftProvider, openRouterModels]);
 
   useEffect(() => {
     const opts = getModelOptions(rightProvider);
-    if (!opts.find(o => o.value === rightModel)) {
+    if (opts.length > 0 && !opts.find(o => o.value === rightModel)) {
       setRightModel(opts[0].value);
     }
-  }, [rightProvider]);
+  }, [rightProvider, openRouterModels]);
 
   const renderContent = (content) => {
     return { __html: DOMPurify.sanitize(marked.parse(content || '')) };
