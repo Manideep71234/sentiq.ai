@@ -18,6 +18,14 @@ class APIKeysUpdate(BaseModel):
 class APIKeysResponse(BaseModel):
     has_groq: bool
     has_openrouter: bool
+    groq_masked: Optional[str] = None
+    openrouter_masked: Optional[str] = None
+
+def mask_key(key: str) -> str:
+    if not key: return None
+    key = key.strip()
+    if len(key) <= 8: return "****"
+    return f"{key[:4]}{'*' * 15}{key[-4:]}"
 
 @router.get("/api-keys", response_model=APIKeysResponse)
 def get_api_keys(user: User = Depends(get_current_user), db: Session = Depends(get_session)):
@@ -27,7 +35,9 @@ def get_api_keys(user: User = Depends(get_current_user), db: Session = Depends(g
     
     return APIKeysResponse(
         has_groq=bool(settings.groq_api_key),
-        has_openrouter=bool(settings.openrouter_api_key)
+        has_openrouter=bool(settings.openrouter_api_key),
+        groq_masked=mask_key(settings.groq_api_key),
+        openrouter_masked=mask_key(settings.openrouter_api_key)
     )
 
 @router.post("/api-keys")

@@ -143,10 +143,16 @@ export default function ChatView({ isResearch = false }) {
   const connectWebSocket = (queryOverride = null) => {
     if (ws) ws.close();
     
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const getBaseUrl = () => {
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        return `ws://${window.location.host}`;
+      }
+      return 'wss://sentiq-ai.onrender.com';
+    };
+    
     const wsUrl = isResearch 
-      ? `${protocol}//${window.location.host}/research/ws`
-      : `${protocol}//${window.location.host}/chat/ws/${sessionId}`;
+      ? `${getBaseUrl()}/research/ws`
+      : `${getBaseUrl()}/chat/ws/${sessionId}`;
       
     const newWs = new WebSocket(wsUrl);
     
