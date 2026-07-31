@@ -94,6 +94,16 @@ export default function ChatView({ isResearch = false }) {
     }
   }, [provider, openRouterModels]);
 
+  // Reset conversation when model or provider changes
+  useEffect(() => {
+    setMessages([]);
+    setSessionId(null);
+    if (ws) {
+      ws.close();
+      setWs(null);
+    }
+  }, [provider, model]);
+
   // ... (keep the rest of the hooks identical)
 
   useEffect(() => {
