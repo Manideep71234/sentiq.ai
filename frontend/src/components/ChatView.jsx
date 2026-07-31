@@ -382,7 +382,7 @@ export default function ChatView({ isResearch = false }) {
             </div>
 
             <button 
-              onClick={() => window.dispatchEvent(new CustomEvent('changeView', { detail: 'settings-keys' }))}
+              onClick={() => window.dispatchEvent(new CustomEvent('changeView', { detail: 'api-keys' }))}
               style={{
                 width: '100%', padding: '14px', background: 'var(--accent-color)', color: 'white',
                 border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '1rem',
