@@ -199,8 +199,13 @@ export default function SettingsAPIKeys() {
           <button 
             type="submit" 
             disabled={isSaving || (!groqKey && !openRouterKey)}
-            className="btn-primary"
-            style={{ marginTop: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', opacity: (isSaving || (!groqKey && !openRouterKey)) ? 0.5 : 1 }}
+            style={{ 
+              marginTop: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', 
+              opacity: (isSaving || (!groqKey && !openRouterKey)) ? 0.5 : 1,
+              background: 'var(--accent-color)', color: 'white', border: 'none', borderRadius: '8px', padding: '12px',
+              cursor: (isSaving || (!groqKey && !openRouterKey)) ? 'default' : 'pointer',
+              fontWeight: '600'
+            }}
           >
             {isSaving ? (
               <>Validating...</>

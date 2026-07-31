@@ -36,7 +36,7 @@ export default function ChatView({ isResearch = false }) {
   useEffect(() => {
     async function fetchModels() {
       try {
-        const settingsRes = await fetch('/settings/api-keys');
+        const settingsRes = await fetch(`/settings/api-keys?t=${Date.now()}`);
         let hasCustomKey = false;
         if (settingsRes.ok) {
           const settings = await settingsRes.json();
