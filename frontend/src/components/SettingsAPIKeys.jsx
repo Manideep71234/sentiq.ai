@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Key, Save, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Key, Save, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 export default function SettingsAPIKeys() {
   const [groqKey, setGroqKey] = useState('');
@@ -8,6 +8,8 @@ export default function SettingsAPIKeys() {
   const [status, setStatus] = useState({ type: '', message: '' });
   const [hasGroq, setHasGroq] = useState(false);
   const [hasOpenRouter, setHasOpenRouter] = useState(false);
+  const [showGroqKey, setShowGroqKey] = useState(false);
+  const [showOpenRouterKey, setShowOpenRouterKey] = useState(false);
 
   useEffect(() => {
     fetch('/settings/api-keys')
@@ -85,13 +87,22 @@ export default function SettingsAPIKeys() {
               Groq API Key
               {hasGroq && <span style={{ color: '#22c55e', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}><CheckCircle2 size={12} /> Configured</span>}
             </label>
-            <input 
-              type="password" 
-              placeholder="gsk_..." 
-              value={groqKey}
-              onChange={(e) => setGroqKey(e.target.value)}
-              style={{ width: '100%', padding: '12px', background: 'var(--system-msg-bg)', border: '1px solid var(--panel-border)', borderRadius: '8px', color: 'var(--text-primary)', outline: 'none' }}
-            />
+            <div style={{ position: 'relative' }}>
+              <input 
+                type={showGroqKey ? "text" : "password"}
+                placeholder="gsk_..." 
+                value={groqKey}
+                onChange={(e) => setGroqKey(e.target.value)}
+                style={{ width: '100%', padding: '12px', paddingRight: '40px', background: 'var(--system-msg-bg)', border: '1px solid var(--panel-border)', borderRadius: '8px', color: 'var(--text-primary)', outline: 'none' }}
+              />
+              <button 
+                type="button"
+                onClick={() => setShowGroqKey(!showGroqKey)}
+                style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
+              >
+                {showGroqKey ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
             <small style={{ color: 'var(--text-secondary)' }}>Get your free key from console.groq.com</small>
           </div>
 
@@ -100,13 +111,22 @@ export default function SettingsAPIKeys() {
               OpenRouter API Key
               {hasOpenRouter && <span style={{ color: '#22c55e', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}><CheckCircle2 size={12} /> Configured</span>}
             </label>
-            <input 
-              type="password" 
-              placeholder="sk-or-v1-..." 
-              value={openRouterKey}
-              onChange={(e) => setOpenRouterKey(e.target.value)}
-              style={{ width: '100%', padding: '12px', background: 'var(--system-msg-bg)', border: '1px solid var(--panel-border)', borderRadius: '8px', color: 'var(--text-primary)', outline: 'none' }}
-            />
+            <div style={{ position: 'relative' }}>
+              <input 
+                type={showOpenRouterKey ? "text" : "password"}
+                placeholder="sk-or-v1-..." 
+                value={openRouterKey}
+                onChange={(e) => setOpenRouterKey(e.target.value)}
+                style={{ width: '100%', padding: '12px', paddingRight: '40px', background: 'var(--system-msg-bg)', border: '1px solid var(--panel-border)', borderRadius: '8px', color: 'var(--text-primary)', outline: 'none' }}
+              />
+              <button 
+                type="button"
+                onClick={() => setShowOpenRouterKey(!showOpenRouterKey)}
+                style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
+              >
+                {showOpenRouterKey ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
             <small style={{ color: 'var(--text-secondary)' }}>Get your key from openrouter.ai/keys</small>
           </div>
 
