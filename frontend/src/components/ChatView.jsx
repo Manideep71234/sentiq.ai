@@ -19,6 +19,7 @@ export default function ChatView({ isResearch = false }) {
   const [streamingContent, setStreamingContent] = useState('');
   const [toolLogs, setToolLogs] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [hasAnyKey, setHasAnyKey] = useState(null);
   
   const historyRef = useRef(null);
 
@@ -40,6 +41,9 @@ export default function ChatView({ isResearch = false }) {
         if (settingsRes.ok) {
           const settings = await settingsRes.json();
           hasCustomKey = settings.has_openrouter;
+          setHasAnyKey(settings.has_groq || settings.has_openrouter);
+        } else {
+          setHasAnyKey(false);
         }
 
         const res = await fetch('https://openrouter.ai/api/v1/models');
@@ -202,6 +206,7 @@ export default function ChatView({ isResearch = false }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (hasAnyKey === false) return;
     if (!input.trim() || isProcessing) return;
     
     const userMsg = input.trim();
@@ -349,6 +354,48 @@ export default function ChatView({ isResearch = false }) {
           </div>
         </form>
       </div>
+
+      {hasAnyKey === false && (
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(5px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+        }}>
+          <div className="animate-pop-in" style={{
+            background: 'var(--panel-bg)', border: '1px solid var(--panel-border)',
+            padding: '32px', borderRadius: '16px', maxWidth: '450px', width: '90%',
+            textAlign: 'center', boxShadow: 'var(--shadow-subtle)', backdropFilter: 'blur(20px)'
+          }}>
+            <h2 style={{ marginBottom: '16px', color: 'var(--text-primary)' }}>API Key Required</h2>
+            <p style={{ marginBottom: '24px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+              To ensure lightning-fast responses and unlock premium AI models, please configure at least one API key to start chatting.
+            </p>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px', textAlign: 'left', background: 'var(--system-msg-bg)', padding: '16px', borderRadius: '12px' }}>
+              <div style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: '500', marginBottom: '4px' }}>Quick Links:</div>
+              <a href="https://console.groq.com/keys" target="_blank" rel="noreferrer" style={{ color: 'var(--accent-color)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '1.2rem' }}>⚡</span> Get a Free Groq Key (Fastest)
+              </a>
+              <a href="https://openrouter.ai/keys" target="_blank" rel="noreferrer" style={{ color: 'var(--accent-color)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '1.2rem' }}>🧠</span> Get an OpenRouter Key (Premium Models)
+              </a>
+            </div>
+
+            <button 
+              onClick={() => window.dispatchEvent(new CustomEvent('changeView', { detail: 'settings-keys' }))}
+              style={{
+                width: '100%', padding: '14px', background: 'var(--accent-color)', color: 'white',
+                border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '1rem',
+                transition: 'opacity 0.2s'
+              }}
+              onMouseOver={(e) => e.target.style.opacity = '0.9'}
+              onMouseOut={(e) => e.target.style.opacity = '1'}
+            >
+              Configure API Keys
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
