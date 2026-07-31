@@ -106,6 +106,24 @@ def change_password(
     
     return {"message": "Password changed successfully. All sessions revoked. Please log in again."}
 
+class ProfileUpdateRequest(BaseModel):
+    full_name: str | None = None
+    profile_pic: str | None = None
+
+@router.put("/profile")
+def update_profile(
+    profile_data: ProfileUpdateRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_session)
+):
+    if profile_data.full_name is not None:
+        user.full_name = profile_data.full_name.strip()
+    if profile_data.profile_pic is not None:
+        user.profile_pic = profile_data.profile_pic
+    db.add(user)
+    db.commit()
+    return {"message": "Profile updated successfully"}
+
 @router.get("/me")
 def get_me(user: User = Depends(get_current_user)):
     return {

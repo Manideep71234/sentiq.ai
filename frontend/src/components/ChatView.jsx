@@ -7,7 +7,7 @@ import ProcessingIndicator, { rollNewProcessingWord } from './ProcessingIndicato
 
 import Dropdown from './Dropdown';
 
-export default function ChatView({ isResearch = false }) {
+export default function ChatView({ isResearch = false, setActiveView }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [sessionId, setSessionId] = useState(null);
@@ -382,7 +382,7 @@ export default function ChatView({ isResearch = false }) {
             </div>
 
             <button 
-              onClick={() => window.dispatchEvent(new CustomEvent('changeView', { detail: 'api-keys' }))}
+              onClick={() => setActiveView && setActiveView('api-keys')}
               style={{
                 width: '100%', padding: '14px', background: 'var(--accent-color)', color: 'white',
                 border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '1rem',

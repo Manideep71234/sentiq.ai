@@ -9,17 +9,31 @@ import CalendarManager from './components/CalendarManager';
 import SettingsScheduledTasks from './components/SettingsScheduledTasks';
 import SettingsAPIKeys from './components/SettingsAPIKeys';
 import CompareView from './components/CompareView';
+import ProfileView from './components/ProfileView';
 
 function App() {
   const [activeView, setActiveView] = useState('chat');
   const [user, setUser] = useState({ username: 'Loading...' });
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [showStartup, setShowStartup] = useState(true);
+
+  useEffect(() => {
+    // Hide startup animation after 2.5s
+    const timer = setTimeout(() => setShowStartup(false), 2500);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    const handleViewChange = (e) => setActiveView(e.detail);
+    window.addEventListener('changeView', handleViewChange);
+    return () => window.removeEventListener('changeView', handleViewChange);
+  }, []);
 
   useEffect(() => {
     fetch('/auth/me')
@@ -46,6 +60,16 @@ function App() {
 
   return (
     <div className="app-wrapper" onMouseMove={handleMouseMove}>
+      {showStartup && (
+        <div className={`startup-overlay ${!showStartup ? 'fade-out' : ''}`}>
+          <svg className="handwriting-svg" viewBox="0 0 400 100">
+            <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="handwriting-text">
+              Sentiq.AI
+            </text>
+          </svg>
+        </div>
+      )}
+      
       <div 
         className="mouse-glow" 
         style={{ left: `${mousePos.x}px`, top: `${mousePos.y}px` }} 
@@ -68,10 +92,10 @@ function App() {
           
           <div className="view-transition" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{ display: activeView === 'chat' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
-              <ChatView />
+              <ChatView setActiveView={setActiveView} />
             </div>
             <div style={{ display: activeView === 'research' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
-              <ChatView isResearch={true} />
+              <ChatView isResearch={true} setActiveView={setActiveView} />
             </div>
             <div style={{ display: activeView === 'documents' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
               <DocumentManager user={user} />
@@ -90,6 +114,9 @@ function App() {
             </div>
             <div style={{ display: activeView === 'api-keys' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
               <SettingsAPIKeys />
+            </div>
+            <div style={{ display: activeView === 'profile' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
+              <ProfileView user={user} setUser={setUser} />
             </div>
             <div style={{ display: activeView === 'compare' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
               <CompareView />
