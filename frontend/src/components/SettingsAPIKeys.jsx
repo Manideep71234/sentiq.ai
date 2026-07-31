@@ -58,7 +58,7 @@ export default function SettingsAPIKeys() {
       </div>
       
       <div className="settings-content" style={{ maxWidth: '600px', margin: '0 auto', padding: '24px' }}>
-        <p style={{ color: 'var(--text-muted)', marginBottom: '32px' }}>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>
           Configure your own API keys to bypass rate limits and access premium models on your own billing. Keys are securely stored and validated instantly. Leave a field blank to keep its existing key.
         </p>
 
@@ -90,9 +90,9 @@ export default function SettingsAPIKeys() {
               placeholder="gsk_..." 
               value={groqKey}
               onChange={(e) => setGroqKey(e.target.value)}
-              style={{ width: '100%', padding: '12px', background: 'var(--input-bg)', border: '1px solid var(--input-border)', borderRadius: '8px', color: 'var(--text-main)', outline: 'none' }}
+              style={{ width: '100%', padding: '12px', background: 'var(--system-msg-bg)', border: '1px solid var(--panel-border)', borderRadius: '8px', color: 'var(--text-primary)', outline: 'none' }}
             />
-            <small style={{ color: 'var(--text-muted)' }}>Get your free key from console.groq.com</small>
+            <small style={{ color: 'var(--text-secondary)' }}>Get your free key from console.groq.com</small>
           </div>
 
           <div className="input-group">
@@ -105,9 +105,9 @@ export default function SettingsAPIKeys() {
               placeholder="sk-or-v1-..." 
               value={openRouterKey}
               onChange={(e) => setOpenRouterKey(e.target.value)}
-              style={{ width: '100%', padding: '12px', background: 'var(--input-bg)', border: '1px solid var(--input-border)', borderRadius: '8px', color: 'var(--text-main)', outline: 'none' }}
+              style={{ width: '100%', padding: '12px', background: 'var(--system-msg-bg)', border: '1px solid var(--panel-border)', borderRadius: '8px', color: 'var(--text-primary)', outline: 'none' }}
             />
-            <small style={{ color: 'var(--text-muted)' }}>Get your key from openrouter.ai/keys</small>
+            <small style={{ color: 'var(--text-secondary)' }}>Get your key from openrouter.ai/keys</small>
           </div>
 
           <button 
