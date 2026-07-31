@@ -2,7 +2,7 @@ import json
 from typing import AsyncGenerator, Dict, Any, List
 from sqlmodel import Session, select
 from core.providers import get_provider
-from core.models import MemoryEntry, Skill, ResearchReport
+from core.models import MemoryEntry, Skill, ResearchReport, UserSettings
 from .tools import BUILTIN_TOOLS, execute_tool
 from .mcp_client import mcp_manager
 
@@ -14,7 +14,8 @@ async def run_research_loop(
     model: str
 ) -> AsyncGenerator[Dict[str, Any], None]:
     
-    provider = get_provider(provider_name)
+    user_settings = db.exec(select(UserSettings).where(UserSettings.user_id == user_id)).first()
+    provider = get_provider(provider_name, user_settings)
     
     # 1. System Prompt for Deep Research
     system_prompt = (

@@ -7,6 +7,7 @@ import EmailManager from './components/EmailManager';
 import NotesTasksManager from './components/NotesTasksManager';
 import CalendarManager from './components/CalendarManager';
 import SettingsScheduledTasks from './components/SettingsScheduledTasks';
+import SettingsAPIKeys from './components/SettingsAPIKeys';
 import CompareView from './components/CompareView';
 
 function App() {
@@ -59,7 +60,7 @@ function App() {
         />
         
         <main className="main-content" style={{ display: 'flex', flexDirection: 'column' }}>
-          {activeView !== 'documents' && activeView !== 'email' && activeView !== 'notes' && activeView !== 'calendar' && activeView !== 'settings' && (
+          {activeView !== 'documents' && activeView !== 'email' && activeView !== 'notes' && activeView !== 'calendar' && activeView !== 'settings' && activeView !== 'scheduled-tasks' && activeView !== 'api-keys' && activeView !== 'compare' && (
             <header className="chat-header">
               <h2>{activeView.charAt(0).toUpperCase() + activeView.slice(1)}</h2>
             </header>
@@ -86,6 +87,9 @@ function App() {
             </div>
             <div style={{ display: activeView === 'settings' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
               <SettingsScheduledTasks user={user} />
+            </div>
+            <div style={{ display: activeView === 'api-keys' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
+              <SettingsAPIKeys />
             </div>
             <div style={{ display: activeView === 'compare' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
               <CompareView />

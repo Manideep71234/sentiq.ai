@@ -4,7 +4,7 @@ import logging
 from typing import AsyncGenerator, Dict, Any, List
 from sqlmodel import Session, select
 from core.providers import get_provider
-from core.models import MemoryEntry, Skill
+from core.models import MemoryEntry, Skill, UserSettings
 from .tools import BUILTIN_TOOLS, execute_tool
 from .mcp_client import mcp_manager
 
@@ -19,7 +19,8 @@ async def run_agent_loop(
     model: str
 ) -> AsyncGenerator[Dict[str, Any], None]:
     
-    provider = get_provider(provider_name)
+    user_settings = db.exec(select(UserSettings).where(UserSettings.user_id == user_id)).first()
+    provider = get_provider(provider_name, user_settings)
     
     # 1. Inject memories and skills into system prompt
     t0 = time.time()

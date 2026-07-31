@@ -1,4 +1,4 @@
-import { MessageSquare, Globe, FileText, Mail, FileEdit, Calendar, GitCompare, Settings, LogOut } from 'lucide-react';
+import { MessageSquare, Globe, FileText, Mail, FileEdit, Calendar, GitCompare, Settings, LogOut, Key } from 'lucide-react';
 
 export default function Sidebar({ activeView, setActiveView, user, toggleTheme, theme }) {
   const navItems = [
@@ -9,6 +9,7 @@ export default function Sidebar({ activeView, setActiveView, user, toggleTheme, 
     { id: 'notes', icon: FileEdit, label: 'Notes' },
     { id: 'calendar', icon: Calendar, label: 'Calendar' },
     { id: 'compare', icon: GitCompare, label: 'Compare' },
+    { id: 'api-keys', icon: Key, label: 'API Keys' },
     { id: 'settings', icon: Settings, label: 'Settings' },
   ];
 

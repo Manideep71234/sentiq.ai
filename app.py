@@ -1,4 +1,5 @@
 import logging
+import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
@@ -22,6 +23,7 @@ from routes.calendar import router as calendar_router
 from routes.notes import router as notes_router
 from routes.tasks import router as tasks_router
 from routes.scheduled_tasks import router as scheduled_tasks_router
+from routes.settings import router as settings_router
 
 from core.scheduler import start_scheduler, sync_db_tasks
 
@@ -107,3 +109,4 @@ app.include_router(calendar_router)
 app.include_router(notes_router)
 app.include_router(tasks_router)
 app.include_router(scheduled_tasks_router)
+app.include_router(settings_router)
