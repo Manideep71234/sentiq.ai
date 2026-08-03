@@ -144,8 +144,10 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
     if (ws) ws.close();
     
     const getBaseUrl = () => {
-      const isSecure = window.location.protocol === 'https:';
-      return `${isSecure ? 'wss' : 'ws'}://${window.location.host}`;
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        return `ws://${window.location.host}`;
+      }
+      return 'wss://sentiq-ai.onrender.com';
     };
     
     const wsUrl = isResearch 
