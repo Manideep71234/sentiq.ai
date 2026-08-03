@@ -196,6 +196,29 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
       }
     };
     
+    newWs.onerror = (error) => {
+      console.error('WebSocket Error:', error);
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: `**Connection Error:** Failed to connect to the server. If this app is hosted on Render's free tier, it may take 50 seconds to wake up from sleep. Please try again in a minute.`, 
+        isError: true 
+      }]);
+      setIsProcessing(false);
+      setStreamingContent('');
+    };
+
+    newWs.onclose = (event) => {
+      if (isProcessing && !event.wasClean) {
+        setMessages(prev => [...prev, { 
+          role: 'assistant', 
+          content: `**Connection Closed Abruptly.** The server may have restarted or crashed.`, 
+          isError: true 
+        }]);
+        setIsProcessing(false);
+        setStreamingContent('');
+      }
+    };
+    
     setWs(newWs);
     return newWs;
   };
