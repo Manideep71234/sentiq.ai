@@ -92,10 +92,10 @@ function App() {
           
           <div className="view-transition" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{ display: activeView === 'chat' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
-              <ChatView setActiveView={setActiveView} />
+              <ChatView activeView={activeView} setActiveView={setActiveView} />
             </div>
             <div style={{ display: activeView === 'research' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
-              <ChatView isResearch={true} setActiveView={setActiveView} />
+              <ChatView isResearch={true} activeView={activeView} setActiveView={setActiveView} />
             </div>
             <div style={{ display: activeView === 'documents' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
               <DocumentManager user={user} />

@@ -1,5 +1,6 @@
 import json
 import time
+import asyncio
 from datetime import datetime, timezone
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException, status
 from sqlmodel import Session, select
@@ -31,6 +32,32 @@ def get_messages(session_id: int, user: User = Depends(get_current_user), db: Se
         raise HTTPException(status_code=404, detail="Session not found")
     messages = db.exec(select(ChatMessage).where(ChatMessage.session_id == session_id).order_by(ChatMessage.created_at.asc())).all()
     return messages
+
+def sync_save_user_msg_and_load_history(session_id: int, user_message: str):
+    with Session(engine) as db:
+        msg = ChatMessage(session_id=session_id, role="user", content=user_message)
+        db.add(msg)
+        db.commit()
+
+        history = db.exec(select(ChatMessage).where(ChatMessage.session_id == session_id).order_by(ChatMessage.created_at.asc())).all()
+        messages = []
+        for h in history:
+            m = {"role": h.role, "content": h.content}
+            if h.tool_calls:
+                m["tool_calls"] = json.loads(h.tool_calls)
+            messages.append(m)
+        return messages
+
+def sync_save_assistant_message(session_id: int, full_assistant_message: str):
+    with Session(engine) as db:
+        if full_assistant_message:
+            ast_msg = ChatMessage(session_id=session_id, role="assistant", content=full_assistant_message)
+            db.add(ast_msg)
+            
+        chat_session = db.exec(select(ChatSession).where(ChatSession.id == session_id)).first()
+        if chat_session:
+            chat_session.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        db.commit()
 
 # WebSocket Endpoint
 async def get_ws_user(websocket: WebSocket) -> User | None:
@@ -86,20 +113,8 @@ async def websocket_chat(websocket: WebSocket, session_id: int):
             if not user_message:
                 continue
 
-            with Session(engine) as db:
-                # Save user message
-                msg = ChatMessage(session_id=session_id, role="user", content=user_message)
-                db.add(msg)
-                db.commit()
-
-                # Load history
-                history = db.exec(select(ChatMessage).where(ChatMessage.session_id == session_id).order_by(ChatMessage.created_at.asc())).all()
-                messages = []
-                for h in history:
-                    m = {"role": h.role, "content": h.content}
-                    if h.tool_calls:
-                        m["tool_calls"] = json.loads(h.tool_calls)
-                    messages.append(m)
+            # Offload to prevent freezing the event loop
+            messages = await asyncio.to_thread(sync_save_user_msg_and_load_history, session_id, user_message)
 
             t_db_done = time.time()
             import logging
@@ -117,15 +132,8 @@ async def websocket_chat(websocket: WebSocket, session_id: int):
                     # Client disconnected or aborted stream
                     pass
 
-                # Save assistant message
-                if full_assistant_message:
-                    ast_msg = ChatMessage(session_id=session_id, role="assistant", content=full_assistant_message)
-                    db.add(ast_msg)
-                    
-                chat_session = db.exec(select(ChatSession).where(ChatSession.id == session_id)).first()
-                if chat_session:
-                    chat_session.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
-                db.commit()
+            # Offload saving to prevent freezing event loop
+            await asyncio.to_thread(sync_save_assistant_message, session_id, full_assistant_message)
             
             await websocket.send_json({"type": "done", "content": full_assistant_message})
 

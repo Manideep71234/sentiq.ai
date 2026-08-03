@@ -1,14 +1,26 @@
 import json
 import time
 import logging
+import asyncio
 from typing import AsyncGenerator, Dict, Any, List
 from sqlmodel import Session, select
+from core.database import engine
 from core.providers import get_provider
 from core.models import MemoryEntry, Skill, UserSettings
 from .tools import BUILTIN_TOOLS, execute_tool
 from .mcp_client import mcp_manager
 
 logger = logging.getLogger(__name__)
+
+def sync_load_agent_data(user_id: int):
+    with Session(engine) as db:
+        user_settings = db.exec(select(UserSettings).where(UserSettings.user_id == user_id)).first()
+        memories = db.exec(select(MemoryEntry).where(MemoryEntry.user_id == user_id)).all()
+        skills = db.exec(select(Skill).where(Skill.user_id == user_id)).all()
+        # Create safe dict copies so we don't return SQLAlchemy models across threads
+        memories_content = [m.content for m in memories]
+        skills_info = [{"name": s.name, "prompt": s.prompt} for s in skills]
+        return user_settings, memories_content, skills_info
 
 async def run_agent_loop(
     session_id: int,
@@ -19,21 +31,20 @@ async def run_agent_loop(
     model: str
 ) -> AsyncGenerator[Dict[str, Any], None]:
     
-    user_settings = db.exec(select(UserSettings).where(UserSettings.user_id == user_id)).first()
+    t0 = time.time()
+    user_settings, memories_content, skills_info = await asyncio.to_thread(sync_load_agent_data, user_id)
+    t1 = time.time()
+    logger.info(f"[(a) DB queries for memory/skills in thread] took {t1 - t0:.4f} seconds")
+
     provider = get_provider(provider_name, user_settings)
     
     # 1. Inject memories and skills into system prompt
-    t0 = time.time()
-    memories = db.exec(select(MemoryEntry).where(MemoryEntry.user_id == user_id)).all()
-    skills = db.exec(select(Skill).where(Skill.user_id == user_id)).all()
-    t1 = time.time()
-    logger.info(f"[(a) DB queries for memory/skills] took {t1 - t0:.4f} seconds")
     
     system_prompt = "You are Sentiq.AI, an advanced intelligent agent.\n"
-    if memories:
-        system_prompt += "User's Long-term Memory:\n" + "\n".join([f"- {m.content}" for m in memories]) + "\n\n"
-    if skills:
-        system_prompt += "Available Skills:\n" + "\n".join([f"- {s.name}: {s.prompt}" for s in skills]) + "\n\n"
+    if memories_content:
+        system_prompt += "User's Long-term Memory:\n" + "\n".join([f"- {m}" for m in memories_content]) + "\n\n"
+    if skills_info:
+        system_prompt += "Available Skills:\n" + "\n".join([f"- {s['name']}: {s['prompt']}" for s in skills_info]) + "\n\n"
         
     full_messages = [{"role": "system", "content": system_prompt}] + messages
     

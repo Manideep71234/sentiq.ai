@@ -7,7 +7,7 @@ import ProcessingIndicator, { rollNewProcessingWord } from './ProcessingIndicato
 
 import Dropdown from './Dropdown';
 
-export default function ChatView({ isResearch = false, setActiveView }) {
+export default function ChatView({ isResearch = false, activeView, setActiveView }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [sessionId, setSessionId] = useState(null);
@@ -33,46 +33,42 @@ export default function ChatView({ isResearch = false, setActiveView }) {
     { value: 'openrouter/auto', label: 'Auto Best Model (OpenRouter)' }
   ]);
 
-  useEffect(() => {
-    async function fetchModels() {
-      try {
-        const settingsRes = await fetch(`/settings/api-keys?t=${Date.now()}`);
-        let hasCustomKey = false;
-        if (settingsRes.ok) {
-          const settings = await settingsRes.json();
-          hasCustomKey = settings.has_openrouter;
-          setHasAnyKey(settings.has_groq || settings.has_openrouter);
-        } else {
-          setHasAnyKey(false);
-        }
-
-        const res = await fetch('https://openrouter.ai/api/v1/models');
-        const data = await res.json();
-        
-        if (data && data.data) {
-          let models = data.data;
-          
-          if (!hasCustomKey) {
-            // Filter models that are completely free (prompt=0 and completion=0)
-            models = models.filter(m => m.pricing && m.pricing.prompt === "0" && m.pricing.completion === "0");
-          }
-          
-          const modelOptions = models.map(m => ({ 
-            value: m.id, 
-            label: `${m.name} ${!hasCustomKey ? '(Free)' : ''}` 
-          }));
-            
-          setOpenRouterModels([
-            { value: 'openrouter/auto', label: 'Auto Best Model' },
-            ...modelOptions
-          ]);
-        }
-      } catch (err) {
-        console.error("Failed to fetch models:", err);
+  const fetchModels = async () => {
+    try {
+      const settingsRes = await fetch(`/settings/api-keys?t=${Date.now()}`);
+      let hasCustomKey = false;
+      if (settingsRes.ok) {
+        const settings = await settingsRes.json();
+        hasCustomKey = settings.has_openrouter;
+        setHasAnyKey(settings.has_groq || settings.has_openrouter);
+      } else {
+        setHasAnyKey(false);
       }
+
+      const res = await fetch('https://openrouter.ai/api/v1/models');
+      const data = await res.json();
+      
+      if (data && data.data) {
+        let models = data.data;
+        if (!hasCustomKey) {
+          models = models.filter(m => m.pricing && m.pricing.prompt === "0" && m.pricing.completion === "0");
+        }
+        const modelOptions = models.map(m => ({ 
+          value: m.id, 
+          label: `${m.name} ${!hasCustomKey ? '(Free)' : ''}` 
+        }));
+        setOpenRouterModels([{ value: 'openrouter/auto', label: 'Auto Best Model' }, ...modelOptions]);
+      }
+    } catch (err) {
+      console.error("Failed to fetch models:", err);
     }
-    fetchModels();
-  }, []);
+  };
+
+  useEffect(() => {
+    if (activeView === 'chat' || activeView === 'research') {
+      fetchModels();
+    }
+  }, [activeView]);
 
   const getModelOptions = (prov) => {
     if (prov === 'ollama') {
