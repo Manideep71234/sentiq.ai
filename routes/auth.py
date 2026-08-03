@@ -125,14 +125,15 @@ def update_profile(
     return {"message": "Profile updated successfully"}
 
 @router.get("/me")
-def get_me(user: User = Depends(get_current_user)):
+def get_me(request: Request, user: User = Depends(get_current_user)):
     return {
         "id": user.id, 
         "username": user.username, 
         "is_admin": user.is_admin,
         "profile_pic": user.profile_pic,
         "full_name": user.full_name,
-        "auth_provider": user.auth_provider
+        "auth_provider": user.auth_provider,
+        "ws_token": request.cookies.get("session_id")
     }
 
 from webauthn import (

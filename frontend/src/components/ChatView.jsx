@@ -149,8 +149,8 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
     };
     
     const wsUrl = isResearch 
-      ? `${getBaseUrl()}/research/ws`
-      : `${getBaseUrl()}/chat/ws/${sessionId}`;
+      ? `${getBaseUrl()}/research/ws?token=${window.wsToken || ''}`
+      : `${getBaseUrl()}/chat/ws/${sessionId}?token=${window.wsToken || ''}`;
       
     const newWs = new WebSocket(wsUrl);
     

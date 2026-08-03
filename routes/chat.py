@@ -63,6 +63,8 @@ def sync_save_assistant_message(session_id: int, full_assistant_message: str):
 async def get_ws_user(websocket: WebSocket) -> User | None:
     session_id = websocket.cookies.get("session_id")
     if not session_id:
+        session_id = websocket.query_params.get("token")
+    if not session_id:
         return None
     with Session(engine) as db:
         session_db = db.exec(select(SessionModel).where(SessionModel.session_id == session_id)).first()

@@ -41,6 +41,7 @@ function App() {
       .then(data => {
         if (data.username) {
           setUser(data);
+          window.wsToken = data.ws_token;
         } else {
           window.location.href = '/login';
         }
