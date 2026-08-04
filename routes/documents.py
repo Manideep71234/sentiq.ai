@@ -125,20 +125,30 @@ async def get_ws_user(websocket: WebSocket, db: Session) -> User | None:
     return user
 
 @router.websocket("/ws/{doc_id}")
-async def websocket_ai_edit(websocket: WebSocket, doc_id: int, db: Session = Depends(get_session)):
+async def websocket_ai_edit(websocket: WebSocket, doc_id: int):
     await websocket.accept()
     
-    user = await get_ws_user(websocket, db)
-    if not user:
-        await websocket.send_json({"error": "Authentication required"})
-        await websocket.close()
+    import os
+    allowed_origins = os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173,https://sentiq-ai.vercel.app").split(",")
+    origin = websocket.headers.get("origin")
+    if origin and origin not in [o.strip() for o in allowed_origins]:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return
-
-    doc = db.exec(select(Document).where(Document.id == doc_id, Document.user_id == user.id)).first()
-    if not doc:
-        await websocket.send_json({"error": "Document not found"})
-        await websocket.close()
-        return
+        
+    from core.database import engine
+    
+    with Session(engine) as db:
+        user = await get_ws_user(websocket, db)
+        if not user:
+            await websocket.send_json({"error": "Authentication required"})
+            await websocket.close()
+            return
+    
+        doc = db.exec(select(Document).where(Document.id == doc_id, Document.user_id == user.id)).first()
+        if not doc:
+            await websocket.send_json({"error": "Document not found"})
+            await websocket.close()
+            return
 
     try:
         while True:
@@ -186,4 +196,10 @@ Output ONLY the final replacement text. Do not output markdown code blocks unles
     except WebSocketDisconnect:
         pass
     except Exception as e:
-        await websocket.send_json({"error": str(e)})
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"WebSocket Error: {e}", exc_info=True)
+        try:
+            await websocket.send_json({"error": "Something went wrong, please try again."})
+        except:
+            pass

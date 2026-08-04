@@ -82,6 +82,14 @@ async def websocket_chat(websocket: WebSocket, session_id: int):
     print(f"DEBUG: New websocket connection for session {session_id}")
     await websocket.accept()
     print(f"DEBUG: Accepted websocket connection for session {session_id}")
+    
+    import os
+    allowed_origins = os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173,https://sentiq-ai.vercel.app").split(",")
+    origin = websocket.headers.get("origin")
+    if origin and origin not in [o.strip() for o in allowed_origins]:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+        
     from core.database import engine
     
     user = await get_ws_user(websocket)
@@ -141,8 +149,10 @@ async def websocket_chat(websocket: WebSocket, session_id: int):
 
         except Exception as e:
             import traceback
-            traceback.print_exc()
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"WebSocket Error: {e}", exc_info=True)
             try:
-                await websocket.send_json({"error": str(e)})
+                await websocket.send_json({"error": "Something went wrong, please try again."})
             except:
                 pass

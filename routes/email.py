@@ -138,7 +138,7 @@ def get_inbox(user: User = Depends(get_current_user), db: Session = Depends(get_
         
     try:
         password = decrypt_string(account.encrypted_password) if account.encrypted_password else None
-        threads = fetch_inbox(account.imap_host, account.imap_port, account.username, password, account.access_token)
+        threads = fetch_inbox(account.imap_host, account.imap_port, account.username, password, decrypt_string(account.access_token) if account.access_token else None)
         
         # Hydrate with cache
         for t in threads:
@@ -171,7 +171,7 @@ def send_reply(data: dict, user: User = Depends(get_current_user), db: Session =
             data["subject"], 
             data["body"], 
             data.get("in_reply_to"),
-            account.access_token
+            decrypt_string(account.access_token) if account.access_token else None
         )
         return {"status": "success"}
     except Exception as e:

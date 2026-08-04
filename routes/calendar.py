@@ -51,7 +51,7 @@ async def get_events(user: User = Depends(get_current_user), db: Session = Depen
         if account.access_token:
             # Use Google Calendar
             from core.integrations.google_calendar_client import GoogleCalendarClient
-            client = GoogleCalendarClient(account.access_token)
+            client = GoogleCalendarClient(decrypt_string(account.access_token))
             events = await client.fetch_events(start_date=start, end_date=end)
             return events
         else:
@@ -74,7 +74,7 @@ async def add_event(data: dict, user: User = Depends(get_current_user), db: Sess
         
         if account.access_token:
             from core.integrations.google_calendar_client import GoogleCalendarClient
-            client = GoogleCalendarClient(account.access_token)
+            client = GoogleCalendarClient(decrypt_string(account.access_token))
             await client.create_event(
                 summary=data["summary"],
                 start_time=start_time,

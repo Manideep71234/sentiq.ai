@@ -60,6 +60,7 @@ def login(request: Request, response: Response, login_data: LoginRequest, db: Se
         value=session_id,
         httponly=True,
         samesite="lax",
+        secure=os.environ.get("COOKIE_SECURE", "true").lower() == "true",
         max_age=7 * 24 * 60 * 60
     )
     return {"message": "Logged in successfully"}
@@ -132,8 +133,7 @@ def get_me(request: Request, user: User = Depends(get_current_user)):
         "is_admin": user.is_admin,
         "profile_pic": user.profile_pic,
         "full_name": user.full_name,
-        "auth_provider": user.auth_provider,
-        "ws_token": request.cookies.get("session_id")
+        "auth_provider": user.auth_provider
     }
 
 from webauthn import (
@@ -271,6 +271,7 @@ async def webauthn_login_verify(request: Request, response: Response, db: Sessio
         value=session_id,
         httponly=True,
         samesite="lax",
+        secure=os.environ.get("COOKIE_SECURE", "true").lower() == "true",
         max_age=7 * 24 * 60 * 60
     )
     
@@ -353,7 +354,7 @@ async def google_callback(code: str, response: Response, db: Session = Depends(g
     if not email:
         raise HTTPException(status_code=400, detail='Email not provided by Google')
         
-    target_email = 'chandamanideeo71234@gmail.com'
+    target_email = os.environ.get('ADMIN_LINK_EMAIL')
     
     # Check if user with this email exists
     user = db.exec(select(User).where(User.email == email)).first()
@@ -361,7 +362,7 @@ async def google_callback(code: str, response: Response, db: Session = Depends(g
         # Check if the username matches the email (legacy or combined)
         user = db.exec(select(User).where(User.username == email)).first()
         
-    if not user and email == target_email:
+    if not user and target_email and email == target_email:
         # Check if admin exists to link
         user = db.exec(select(User).where(User.username == 'admin')).first()
         if user:
@@ -404,14 +405,15 @@ async def google_callback(code: str, response: Response, db: Session = Depends(g
         db.commit()
     # Save Calendar Tokens
     from core.models import CalendarAccount
+    from core.security import encrypt_string
     calendar_account = db.exec(select(CalendarAccount).where(CalendarAccount.user_id == user.id)).first()
     if not calendar_account:
         calendar_account = CalendarAccount(user_id=user.id, caldav_url="", username="", encrypted_password="")
         db.add(calendar_account)
     
-    calendar_account.access_token = access_token
+    calendar_account.access_token = encrypt_string(access_token)
     if refresh_token:
-        calendar_account.refresh_token = refresh_token
+        calendar_account.refresh_token = encrypt_string(refresh_token)
     calendar_account.token_expires_at = int(datetime.now(timezone.utc).timestamp()) + expires_in
     
     # Save Email Tokens
@@ -427,9 +429,9 @@ async def google_callback(code: str, response: Response, db: Session = Depends(g
         )
         db.add(email_account)
         
-    email_account.access_token = access_token
+    email_account.access_token = encrypt_string(access_token)
     if refresh_token:
-        email_account.refresh_token = refresh_token
+        email_account.refresh_token = encrypt_string(refresh_token)
     email_account.token_expires_at = int(datetime.now(timezone.utc).timestamp()) + expires_in
     email_account.username = email
     
@@ -457,7 +459,7 @@ async def google_callback(code: str, response: Response, db: Session = Depends(g
         value=session_id,
         httponly=True,
         samesite='lax',
-        secure=False, # Set true for prod
+        secure=os.environ.get("COOKIE_SECURE", "true").lower() == "true",
         expires=cookie_expires_at
     )
     

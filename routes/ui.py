@@ -29,4 +29,6 @@ def index(request: Request, user: User | None = Depends(get_current_user_optiona
 def login_page(request: Request, user: User | None = Depends(get_current_user_optional)):
     if user:
         return RedirectResponse(url="/", status_code=302)
-    return templates.TemplateResponse(request, "login.html")
+    if os.path.exists("frontend/dist/index.html"):
+        return FileResponse("frontend/dist/index.html")
+    return HTMLResponse("<html><body><h2>Please run npm run build in frontend directory</h2></body></html>")

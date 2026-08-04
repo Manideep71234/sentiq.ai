@@ -26,9 +26,20 @@ def get_encryption_key():
     return key.encode()
 
 def encrypt_string(plaintext: str) -> str:
+    if not plaintext:
+        return plaintext
     f = Fernet(get_encryption_key())
-    return f.encrypt(plaintext.encode()).decode()
+    try:
+        f.decrypt(plaintext.encode())
+        return plaintext # Already encrypted
+    except Exception:
+        return f.encrypt(plaintext.encode()).decode()
 
 def decrypt_string(ciphertext: str) -> str:
+    if not ciphertext:
+        return ciphertext
     f = Fernet(get_encryption_key())
-    return f.decrypt(ciphertext.encode()).decode()
+    try:
+        return f.decrypt(ciphertext.encode()).decode()
+    except Exception:
+        return ciphertext # Plaintext

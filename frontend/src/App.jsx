@@ -10,8 +10,13 @@ import SettingsScheduledTasks from './components/SettingsScheduledTasks';
 import SettingsAPIKeys from './components/SettingsAPIKeys';
 import CompareView from './components/CompareView';
 import ProfileView from './components/ProfileView';
+import LoginView from './components/LoginView';
 
 function App() {
+  if (window.location.pathname === '/login') {
+    return <LoginView />;
+  }
+
   const [activeView, setActiveView] = useState('chat');
   const [user, setUser] = useState({ username: 'Loading...' });
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
@@ -41,7 +46,6 @@ function App() {
       .then(data => {
         if (data.username) {
           setUser(data);
-          window.wsToken = data.ws_token;
         } else {
           window.location.href = '/login';
         }

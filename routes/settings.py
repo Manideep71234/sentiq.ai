@@ -33,11 +33,15 @@ def get_api_keys(user: User = Depends(get_current_user), db: Session = Depends(g
     if not settings:
         return APIKeysResponse(has_groq=False, has_openrouter=False)
     
+    from core.security import decrypt_string
+    groq_plain = decrypt_string(settings.groq_api_key) if settings.groq_api_key else None
+    or_plain = decrypt_string(settings.openrouter_api_key) if settings.openrouter_api_key else None
+    
     return APIKeysResponse(
         has_groq=bool(settings.groq_api_key),
         has_openrouter=bool(settings.openrouter_api_key),
-        groq_masked=mask_key(settings.groq_api_key),
-        openrouter_masked=mask_key(settings.openrouter_api_key)
+        groq_masked=mask_key(groq_plain),
+        openrouter_masked=mask_key(or_plain)
     )
 
 @router.post("/api-keys")
@@ -68,17 +72,18 @@ async def update_api_keys(keys: APIKeysUpdate, user: User = Depends(get_current_
         settings = UserSettings(user_id=user.id)
         db.add(settings)
     
+    from core.security import encrypt_string
     if keys.groq_api_key is not None:
         if keys.groq_api_key == "":
             settings.groq_api_key = None
         else:
-            settings.groq_api_key = keys.groq_api_key.strip()
+            settings.groq_api_key = encrypt_string(keys.groq_api_key.strip())
             
     if keys.openrouter_api_key is not None:
         if keys.openrouter_api_key == "":
             settings.openrouter_api_key = None
         else:
-            settings.openrouter_api_key = keys.openrouter_api_key.strip()
+            settings.openrouter_api_key = encrypt_string(keys.openrouter_api_key.strip())
             
     settings.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     db.commit()

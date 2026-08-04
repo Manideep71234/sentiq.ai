@@ -1,5 +1,6 @@
 import asyncio
 import time
+# pyrefly: ignore [missing-import]
 from sqlmodel import Session
 from core.database import engine
 from core.models import User

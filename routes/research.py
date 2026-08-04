@@ -19,6 +19,14 @@ async def websocket_research(websocket: WebSocket):
     from core.database import engine
     await websocket.accept()
     
+    import os
+    from fastapi import status
+    allowed_origins = os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173,https://sentiq-ai.vercel.app").split(",")
+    origin = websocket.headers.get("origin")
+    if origin and origin not in [o.strip() for o in allowed_origins]:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+    
     user = await get_ws_user(websocket)
     if not user:
         await websocket.send_json({"error": "Authentication required"})
@@ -44,4 +52,10 @@ async def websocket_research(websocket: WebSocket):
     except WebSocketDisconnect:
         pass
     except Exception as e:
-        await websocket.send_json({"error": str(e)})
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"WebSocket Error: {e}", exc_info=True)
+        try:
+            await websocket.send_json({"error": "Something went wrong, please try again."})
+        except:
+            pass
