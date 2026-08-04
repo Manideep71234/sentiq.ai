@@ -131,9 +131,11 @@ async def websocket_ai_edit(websocket: WebSocket, doc_id: int):
     import os
     allowed_origins = os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173,https://sentiq-ai.vercel.app").split(",")
     origin = websocket.headers.get("origin")
-    if origin and origin not in [o.strip() for o in allowed_origins]:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-        return
+    if origin:
+        is_allowed = any(origin.strip() == o.strip() for o in allowed_origins) or origin.endswith(".vercel.app") or origin.startswith("http://localhost:")
+        if not is_allowed:
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+            return
         
     from core.database import engine
     
