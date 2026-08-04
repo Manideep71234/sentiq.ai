@@ -133,7 +133,8 @@ def get_me(request: Request, user: User = Depends(get_current_user)):
         "is_admin": user.is_admin,
         "profile_pic": user.profile_pic,
         "full_name": user.full_name,
-        "auth_provider": user.auth_provider
+        "auth_provider": user.auth_provider,
+        "ws_token": request.cookies.get("session_id")
     }
 
 from webauthn import (
