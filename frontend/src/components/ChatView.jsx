@@ -23,6 +23,15 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
 
   const historyRef = useRef(null);
   const lastUserMessageRef = useRef('');
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (!isProcessing && inputRef.current) {
+      setTimeout(() => {
+        if (inputRef.current) inputRef.current.focus();
+      }, 10);
+    }
+  }, [isProcessing]);
 
   const providerOptions = [
     { value: 'openrouter', label: 'OpenRouter' },
@@ -372,6 +381,7 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
       <div className="chat-input-container">
         <form className="chat-form" onSubmit={handleSubmit}>
           <textarea
+            ref={inputRef}
             className="chat-input"
             value={input}
             onChange={(e) => setInput(e.target.value)}

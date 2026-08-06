@@ -154,7 +154,19 @@ async def websocket_chat(websocket: WebSocket, session_id: int):
             import logging
             logger = logging.getLogger(__name__)
             logger.error(f"WebSocket Error: {e}", exc_info=True)
+            
+            error_details = str(e)
+            if "429" in error_details:
+                friendly_error = "Rate limit reached. Please wait a moment and try again."
+            elif "context length" in error_details.lower() or "too long" in error_details.lower():
+                friendly_error = "The conversation has become too long for the model's context window. Please start a new chat."
+            else:
+                # Keep it safe but informative
+                friendly_error = f"Something went wrong: {error_details}"
+                if len(friendly_error) > 200:
+                    friendly_error = friendly_error[:200] + "..."
+                    
             try:
-                await websocket.send_json({"error": "Something went wrong, please try again."})
+                await websocket.send_json({"error": friendly_error})
             except:
                 pass
