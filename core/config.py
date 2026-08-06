@@ -17,4 +17,5 @@ settings = Settings()
 if not settings.SECRET_KEY or settings.SECRET_KEY == "":
     settings.SECRET_KEY = "replace_this_with_a_secure_key_in_production"
 if not settings.ENCRYPTION_KEY or settings.ENCRYPTION_KEY == "":
-    settings.ENCRYPTION_KEY = "12345678901234567890123456789012"
+    # Fernet requires a 32-byte url-safe base64-encoded key
+    settings.ENCRYPTION_KEY = "MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI="
