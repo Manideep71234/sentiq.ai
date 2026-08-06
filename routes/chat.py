@@ -158,6 +158,8 @@ async def websocket_chat(websocket: WebSocket, session_id: int):
             error_details = str(e)
             if "429" in error_details:
                 friendly_error = "Rate limit reached. Please wait a moment and try again."
+            elif "402" in error_details:
+                friendly_error = "Response too long for current settings or insufficient credits. Try a shorter request."
             elif "context length" in error_details.lower() or "too long" in error_details.lower():
                 friendly_error = "The conversation has become too long for the model's context window. Please start a new chat."
             else:

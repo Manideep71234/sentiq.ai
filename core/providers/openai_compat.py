@@ -33,7 +33,8 @@ class OpenAICompatProvider(BaseProvider):
         payload = {
             "model": model,
             "messages": messages,
-            "stream": True
+            "stream": True,
+            "max_tokens": settings.MAX_TOKENS_PER_REQUEST
         }
         if tools:
             payload["tools"] = tools
