@@ -22,6 +22,7 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
   const [hasAnyKey, setHasAnyKey] = useState(null);
 
   const historyRef = useRef(null);
+  const lastUserMessageRef = useRef('');
 
   const providerOptions = [
     { value: 'openrouter', label: 'OpenRouter' },
@@ -194,6 +195,7 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
         if (isResearch) newWs.close();
       } else if (data.error) {
         setMessages(prev => [...prev, { role: 'assistant', content: `**Error:** ${data.error}`, isError: true }]);
+        setInput(lastUserMessageRef.current);
         setIsProcessing(false);
         currentContent = '';
         currentToolLogs = [];
@@ -208,6 +210,7 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
         content: `**Connection Error:** Failed to connect to the server. Please check your internet connection and try again.`,
         isError: true
       }]);
+      setInput(lastUserMessageRef.current);
       setIsProcessing(false);
       setStreamingContent('');
     };
@@ -234,6 +237,7 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
     if (!input.trim() || isProcessing) return;
 
     const userMsg = input.trim();
+    lastUserMessageRef.current = userMsg;
     setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
     setInput('');
     setIsProcessing(true);

@@ -65,7 +65,13 @@ async def run_agent_loop(
                 first_token = True
                 
             if "error" in chunk:
-                yield {"error": chunk["error"]}
+                err_msg = chunk["error"]
+                if isinstance(err_msg, str) and ("tool call validation failed" in err_msg.lower() or "not in request.tools" in err_msg.lower()):
+                    friendly_msg = "I attempted to use a web search tool that is not currently available. Please provide the information directly or ask me to proceed without it."
+                    yield {"type": "content", "content": f"\n\n*(System: {friendly_msg})*\n\n"}
+                    break
+                else:
+                    yield {"error": err_msg}
                 break
                 
             if chunk.get("type") == "content":
