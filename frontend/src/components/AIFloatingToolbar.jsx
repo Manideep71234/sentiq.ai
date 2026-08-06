@@ -100,8 +100,15 @@ export default function AIFloatingToolbar({ editorRef, docId, onContentChange })
     setDiffNode({ container: diffContainer, original: originalText, suggestionNode });
 
     // Stream from websocket
-    const ws = new WebSocket(`ws://${window.location.host}/documents/ws/${docId}`);
+    const getWsBaseUrl = () => {
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        return `ws://${window.location.host}`;
+      }
+      return 'wss://sentiqai-production.up.railway.app';
+    };
     
+    const wsUrl = `${getWsBaseUrl()}/documents/ws/${docId}?token=${window.wsToken || ''}`;
+    const ws = new WebSocket(wsUrl);
     ws.onopen = () => {
       ws.send(JSON.stringify({
         selected_text: originalText,

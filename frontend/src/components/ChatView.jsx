@@ -14,13 +14,13 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
   const [ws, setWs] = useState(null);
   const [provider, setProvider] = useState('openrouter');
   const [model, setModel] = useState('openrouter/auto');
-  
+
   // Realtime streaming state
   const [streamingContent, setStreamingContent] = useState('');
   const [toolLogs, setToolLogs] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [hasAnyKey, setHasAnyKey] = useState(null);
-  
+
   const historyRef = useRef(null);
 
   const providerOptions = [
@@ -47,15 +47,15 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
 
       const res = await fetch('https://openrouter.ai/api/v1/models');
       const data = await res.json();
-      
+
       if (data && data.data) {
         let models = data.data;
         if (!hasCustomKey) {
           models = models.filter(m => m.pricing && m.pricing.prompt === "0" && m.pricing.completion === "0");
         }
-        const modelOptions = models.map(m => ({ 
-          value: m.id, 
-          label: `${m.name} ${!hasCustomKey ? '(Free)' : ''}` 
+        const modelOptions = models.map(m => ({
+          value: m.id,
+          label: `${m.name} ${!hasCustomKey ? '(Free)' : ''}`
         }));
         setOpenRouterModels([{ value: 'openrouter/auto', label: 'Auto Best Model' }, ...modelOptions]);
       }
@@ -112,16 +112,16 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
     setToolLogs([]);
     setStreamingContent('');
     setIsProcessing(false);
-    
+
     if (!isResearch) {
       initChatSession();
     }
-    
+
     return () => {
       if (ws) ws.close();
     };
   }, [isResearch]);
-  
+
   useEffect(() => {
     if (historyRef.current) {
       historyRef.current.scrollTop = historyRef.current.scrollHeight;
@@ -142,20 +142,20 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
 
   const connectWebSocket = (queryOverride = null) => {
     if (ws) ws.close();
-    
+
     const getBaseUrl = () => {
       if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         return `ws://${window.location.host}`;
       }
       return 'wss://sentiqai-production.up.railway.app';
     };
-    
-    const wsUrl = isResearch 
+
+    const wsUrl = isResearch
       ? `${getBaseUrl()}/research/ws?token=${window.wsToken || ''}`
       : `${getBaseUrl()}/chat/ws/${sessionId}?token=${window.wsToken || ''}`;
-      
+
     const newWs = new WebSocket(wsUrl);
-    
+
     newWs.onopen = () => {
       if (isResearch && queryOverride) {
         newWs.send(JSON.stringify({
@@ -165,13 +165,13 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
         }));
       }
     };
-    
+
     let currentContent = '';
     let currentToolLogs = [];
-    
+
     newWs.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      
+
       if (data.type === 'content') {
         currentContent += (data.delta || data.content || '');
         setStreamingContent(currentContent);
@@ -195,13 +195,13 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
         if (isResearch) newWs.close();
       }
     };
-    
+
     newWs.onerror = (error) => {
       console.error('WebSocket Error:', error);
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: `**Connection Error:** Failed to connect to the server. If this app is hosted on Render's free tier, it may take 50 seconds to wake up from sleep. Please try again in a minute.`, 
-        isError: true 
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `**Connection Error:** Failed to connect to the server. Please check your internet connection and try again.`,
+        isError: true
       }]);
       setIsProcessing(false);
       setStreamingContent('');
@@ -209,16 +209,16 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
 
     newWs.onclose = (event) => {
       if (isProcessing && !event.wasClean) {
-        setMessages(prev => [...prev, { 
-          role: 'assistant', 
-          content: `**Connection Closed Abruptly.** The server may have restarted or crashed.`, 
-          isError: true 
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `**Connection Closed Abruptly.** The server may have restarted or crashed.`,
+          isError: true
         }]);
         setIsProcessing(false);
         setStreamingContent('');
       }
     };
-    
+
     setWs(newWs);
     return newWs;
   };
@@ -227,7 +227,7 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
     e.preventDefault();
     if (hasAnyKey === false) return;
     if (!input.trim() || isProcessing) return;
-    
+
     const userMsg = input.trim();
     setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
     setInput('');
@@ -235,7 +235,7 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
     setToolLogs([]);
     setStreamingContent('');
     rollNewProcessingWord(); // Pick a new static word for this chat generation
-    
+
     if (isResearch) {
       connectWebSocket(userMsg);
     } else {
@@ -276,20 +276,20 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      
+
       {/* Model Selector Bar */}
       <div style={{ padding: '0.5rem 2rem', borderBottom: '1px solid var(--panel-border)', display: 'flex', gap: '1rem', background: 'transparent' }}>
-        <Dropdown 
-          value={provider} 
-          onChange={setProvider} 
-          options={providerOptions} 
+        <Dropdown
+          value={provider}
+          onChange={setProvider}
+          options={providerOptions}
         />
-        
+
         <div className="animate-pop-in">
-          <Dropdown 
-            value={model} 
-            onChange={setModel} 
-            options={getModelOptions(provider)} 
+          <Dropdown
+            value={model}
+            onChange={setModel}
+            options={getModelOptions(provider)}
           />
         </div>
       </div>
@@ -302,17 +302,17 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
             </div>
           </div>
         )}
-        
+
         {messages.map((msg, i) => (
           <div key={i} className={`message message-${msg.role}`}>
             <div style={{ width: '100%' }}>
               {msg.toolLogs && msg.toolLogs.length > 0 && (
                 <ToolLog logs={msg.toolLogs} isDone={true} />
               )}
-              <div 
-                className="message-content" 
+              <div
+                className="message-content"
                 style={msg.isError ? { color: 'red' } : {}}
-                dangerouslySetInnerHTML={renderContent(msg.content)} 
+                dangerouslySetInnerHTML={renderContent(msg.content)}
               />
               {msg.stopped && (
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -322,13 +322,13 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
             </div>
           </div>
         ))}
-        
+
         {/* Active streaming message */}
         {isProcessing && (
           <div className="message message-assistant">
             <div style={{ width: '100%' }}>
               <ToolLog logs={toolLogs} isDone={false} />
-              
+
               {!streamingContent && toolLogs.length === 0 && (
                 <div className="message-content">
                   <ProcessingIndicator />
@@ -336,9 +336,9 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
               )}
 
               {streamingContent && (
-                <div 
-                  className="message-content" 
-                  dangerouslySetInnerHTML={renderContent(streamingContent)} 
+                <div
+                  className="message-content"
+                  dangerouslySetInnerHTML={renderContent(streamingContent)}
                 />
               )}
             </div>
@@ -389,18 +389,18 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
             <p style={{ marginBottom: '24px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
               To ensure lightning-fast responses and unlock premium AI models, please configure at least one API key to start chatting.
             </p>
-            
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px', textAlign: 'left', background: 'var(--system-msg-bg)', padding: '16px', borderRadius: '12px' }}>
               <div style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: '500', marginBottom: '4px' }}>Quick Links:</div>
               <a href="https://console.groq.com/keys" target="_blank" rel="noreferrer" style={{ color: 'var(--accent-color)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '1.2rem' }}>⚡</span> Get a Free Groq Key (Fastest)
               </a>
               <a href="https://openrouter.ai/keys" target="_blank" rel="noreferrer" style={{ color: 'var(--accent-color)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '1.2rem' }}>🧠</span> Get an OpenRouter Key (Premium Models)
+                <span style={{ fontSize: '1.2rem' }}>🧠</span> Get an OpenRouter Key (Free/Premium Models)
               </a>
             </div>
 
-            <button 
+            <button
               onClick={() => setActiveView && setActiveView('api-keys')}
               style={{
                 width: '100%', padding: '14px', background: 'var(--accent-color)', color: 'white',
