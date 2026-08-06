@@ -20,6 +20,7 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
   const [toolLogs, setToolLogs] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [hasAnyKey, setHasAnyKey] = useState(null);
+  const [toolbar, setToolbar] = useState({ show: false, x: 0, y: 0, text: '' });
 
   const historyRef = useRef(null);
   const lastUserMessageRef = useRef('');
@@ -32,6 +33,65 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
       }, 10);
     }
   }, [isProcessing]);
+
+  useEffect(() => {
+    const renderer = new marked.Renderer();
+    renderer.code = (code, language) => {
+      const escapedCode = code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+      return `
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="code-language">${language || 'text'}</span>
+            <button class="copy-btn" data-code="${escapedCode}">Copy</button>
+          </div>
+          <pre><code class="language-${language || 'text'}">${escapedCode}</code></pre>
+        </div>
+      `;
+    };
+    marked.setOptions({ renderer });
+  }, []);
+
+  useEffect(() => {
+    const handleMouseUp = () => {
+      const selection = window.getSelection();
+      const text = selection.toString().trim();
+      
+      if (text && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        const container = range.commonAncestorContainer;
+        const elem = container.nodeType === 3 ? container.parentNode : container;
+        
+        if (elem && elem.closest && elem.closest('.message-assistant')) {
+          const rect = range.getBoundingClientRect();
+          setToolbar({
+            show: true,
+            text,
+            x: rect.left + rect.width / 2,
+            y: rect.top - 45
+          });
+          return;
+        }
+      }
+      
+      if (!text) {
+        setToolbar({ show: false, x: 0, y: 0, text: '' });
+      }
+    };
+    
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => document.removeEventListener('mouseup', handleMouseUp);
+  }, []);
+
+  const handleGlobalClick = (e) => {
+    if (e.target.classList.contains('copy-btn')) {
+      const code = e.target.getAttribute('data-code');
+      const decodedCode = code.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&amp;/g, "&");
+      navigator.clipboard.writeText(decodedCode).then(() => {
+        e.target.innerText = 'Copied!';
+        setTimeout(() => { if(e.target) e.target.innerText = 'Copy'; }, 2000);
+      });
+    }
+  };
 
   const providerOptions = [
     { value: 'openrouter', label: 'OpenRouter' },
@@ -307,7 +367,28 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
   };
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }} onClick={handleGlobalClick}>
+      
+      {toolbar.show && (
+        <div className="selection-toolbar" style={{ left: toolbar.x, top: toolbar.y }}>
+          <button onClick={() => { 
+            setInput(`Explain this part:\n\n> ${toolbar.text}\n\n`); 
+            setToolbar(prev => ({...prev, show: false})); 
+            if (inputRef.current) inputRef.current.focus(); 
+          }}>Explain</button>
+          
+          <button onClick={() => { 
+            setInput(`I have a question about this part:\n\n> ${toolbar.text}\n\n`); 
+            setToolbar(prev => ({...prev, show: false})); 
+            if (inputRef.current) inputRef.current.focus(); 
+          }}>Ask</button>
+          
+          <button onClick={() => { 
+            navigator.clipboard.writeText(toolbar.text); 
+            setToolbar(prev => ({...prev, show: false})); 
+          }}>Copy</button>
+        </div>
+      )}
 
       {/* Model Selector Bar */}
       <div style={{ padding: '0.5rem 2rem', borderBottom: '1px solid var(--panel-border)', display: 'flex', gap: '1rem', background: 'transparent' }}>

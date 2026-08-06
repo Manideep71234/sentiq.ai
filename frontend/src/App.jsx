@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Menu } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import ChatView from './components/ChatView';
 
@@ -22,6 +23,7 @@ function App() {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [showStartup, setShowStartup] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     // Hide startup animation after 2.5s
@@ -57,7 +59,11 @@ function App() {
   }, []);
 
   const handleMouseMove = (e) => {
-    setMousePos({ x: e.clientX, y: e.clientY });
+    const rect = e.currentTarget.getBoundingClientRect();
+    setMousePos({ 
+      x: e.clientX - rect.left, 
+      y: e.clientY - rect.top 
+    });
   };
 
   const toggleTheme = () => {
@@ -76,20 +82,32 @@ function App() {
         </div>
       )}
       
-      <div 
-        className="mouse-glow" 
-        style={{ left: `${mousePos.x}px`, top: `${mousePos.y}px` }} 
-      />
-      <div className="app-container fade-in">
+      <div className="app-container fade-in" onMouseMove={handleMouseMove}>
+        <div 
+          className="mouse-glow" 
+          style={{ 
+            left: `${mousePos.x}px`, 
+            top: `${mousePos.y}px` 
+          }} 
+        />
         <Sidebar 
           activeView={activeView} 
           setActiveView={setActiveView} 
           user={user} 
           toggleTheme={toggleTheme} 
           theme={theme} 
+          isOpen={isSidebarOpen}
+          setIsOpen={setIsSidebarOpen}
         />
         
-        <main className="main-content" style={{ display: 'flex', flexDirection: 'column' }}>
+        <main className="main-content" style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
+          <button 
+            className="mobile-menu-btn" 
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          >
+            <Menu size={24} />
+          </button>
+          
           {activeView !== 'documents' && activeView !== 'email' && activeView !== 'notes' && activeView !== 'calendar' && activeView !== 'settings' && activeView !== 'scheduled-tasks' && activeView !== 'api-keys' && activeView !== 'compare' && (
             <header className="chat-header">
               <h2>{activeView.charAt(0).toUpperCase() + activeView.slice(1)}</h2>
