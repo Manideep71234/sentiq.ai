@@ -41,7 +41,10 @@ async def run_agent_loop(
     # 1. Inject memories and skills into system prompt
     
     system_prompt = "You are Sentiq.AI, an advanced intelligent agent.\n"
-    system_prompt += "You have a powerful `web_search` tool. Use it whenever a question requires current information, specific facts you are unsure about, or anything about specific real-world entities (people, places, institutions, companies). DO NOT GUESS or hallucinate tools.\n\n"
+    system_prompt += "CRITICAL INSTRUCTIONS:\n"
+    system_prompt += "1. For casual greetings (e.g., 'hi', 'hello'), conversational chatter, or simple questions, respond directly WITHOUT calling any tools.\n"
+    system_prompt += "2. You have a powerful `web_search` tool. Use it ONLY when a question requires current information, specific facts you are unsure about, or anything about specific real-world entities. DO NOT GUESS.\n"
+    system_prompt += "3. DO NOT call any tool unless it is strictly necessary to answer the user's prompt. Do not hallucinate files or operations.\n\n"
     if memories_content:
         system_prompt += "User's Long-term Memory:\n" + "\n".join([f"- {m}" for m in memories_content]) + "\n\n"
     if skills_info:
