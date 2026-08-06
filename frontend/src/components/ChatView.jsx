@@ -134,13 +134,17 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
       if (res.ok) {
         const data = await res.json();
         setSessionId(data.id);
+        return data.id;
       }
+      console.error("Failed to create chat session. Status:", res.status);
+      return null;
     } catch (e) {
-      console.error(e);
+      console.error("Network error creating chat session:", e);
+      return null;
     }
   };
 
-  const connectWebSocket = (queryOverride = null) => {
+  const connectWebSocket = (queryOverride = null, activeSessionId = null) => {
     if (ws) ws.close();
 
     const getBaseUrl = () => {
@@ -150,9 +154,10 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
       return 'wss://sentiqai-production.up.railway.app';
     };
 
+    const targetSessionId = activeSessionId || sessionId;
     const wsUrl = isResearch
       ? `${getBaseUrl()}/research/ws?token=${window.wsToken || ''}`
-      : `${getBaseUrl()}/chat/ws/${sessionId}?token=${window.wsToken || ''}`;
+      : `${getBaseUrl()}/chat/ws/${targetSessionId}?token=${window.wsToken || ''}`;
 
     const newWs = new WebSocket(wsUrl);
 
@@ -223,7 +228,7 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
     return newWs;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (hasAnyKey === false) return;
     if (!input.trim() || isProcessing) return;
@@ -236,12 +241,26 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
     setStreamingContent('');
     rollNewProcessingWord(); // Pick a new static word for this chat generation
 
+    let targetSessionId = sessionId;
+    if (!isResearch && !targetSessionId) {
+      targetSessionId = await initChatSession();
+      if (!targetSessionId) {
+        setMessages(prev => [...prev, { 
+          role: 'assistant', 
+          content: `**Error:** Failed to initialize chat session. Please ensure you are logged in and try again.`, 
+          isError: true 
+        }]);
+        setIsProcessing(false);
+        return;
+      }
+    }
+
     if (isResearch) {
       connectWebSocket(userMsg);
     } else {
       let activeWs = ws;
       if (!activeWs || activeWs.readyState !== WebSocket.OPEN) {
-        activeWs = connectWebSocket();
+        activeWs = connectWebSocket(null, targetSessionId);
         activeWs.onopen = () => {
           activeWs.send(JSON.stringify({ message: userMsg, provider, model }));
         };
