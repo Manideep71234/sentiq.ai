@@ -49,14 +49,34 @@ def save_memory(user_id: int, db: Session, content: str) -> str:
     except Exception as e:
         return f"Error saving memory: {str(e)}"
 
-def web_search(query: str, max_results: int = 5) -> str:
+def web_search(query: str, max_results: int = 3) -> str:
     try:
         results = DDGS().text(query, max_results=max_results)
         if not results:
             return "No results found."
+        
+        urls = [r.get('href') for r in results if r.get('href')]
+        
+        import concurrent.futures
+        fetched_contents = {}
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(urls)) as executor:
+            future_to_url = {executor.submit(read_url, url): url for url in urls}
+            for future in concurrent.futures.as_completed(future_to_url):
+                url = future_to_url[future]
+                try:
+                    text = future.result()
+                    if len(text) > 3000:
+                        text = text[:3000] + "\n...[Content Truncated]..."
+                    fetched_contents[url] = text
+                except Exception as exc:
+                    fetched_contents[url] = f"Error fetching: {exc}"
+        
         formatted = []
         for r in results:
-            formatted.append(f"Title: {r.get('title')}\nURL: {r.get('href')}\nSnippet: {r.get('body')}\n")
+            url = r.get('href')
+            content = fetched_contents.get(url, "No content")
+            formatted.append(f"Title: {r.get('title')}\nURL: {url}\n--- UNTRUSTED WEB CONTENT START ---\n{content}\n--- UNTRUSTED WEB CONTENT END ---\n")
+            
         return "\n".join(formatted)
     except Exception as e:
         return f"Error performing web search: {str(e)}"
@@ -157,7 +177,7 @@ BUILTIN_TOOLS = [
                 "type": "object",
                 "properties": {
                     "query": {"type": "string", "description": "The search query"},
-                    "max_results": {"type": "integer", "description": "Maximum number of results to return (default 5)"}
+                    "max_results": {"type": "integer", "description": "Maximum number of results to return (default 3)"}
                 },
                 "required": ["query"]
             }
@@ -195,6 +215,8 @@ BUILTIN_TOOLS = [
         }
     }
 ]
+import time
+search_rate_limits = {}
 
 def execute_tool(name: str, arguments: dict, user_id: int, db: Session) -> str:
     if name == "read_file":
@@ -204,7 +226,14 @@ def execute_tool(name: str, arguments: dict, user_id: int, db: Session) -> str:
     elif name == "save_memory":
         return save_memory(user_id, db, arguments.get("content", ""))
     elif name == "web_search":
-        return web_search(arguments.get("query", ""), arguments.get("max_results", 5))
+        now = time.time()
+        user_searches = search_rate_limits.get(user_id, [])
+        user_searches = [t for t in user_searches if now - t < 60]
+        if len(user_searches) >= 5:
+            return "Error: Web search rate limit exceeded (max 5 per minute). Please try again later."
+        user_searches.append(now)
+        search_rate_limits[user_id] = user_searches
+        return web_search(arguments.get("query", ""), arguments.get("max_results", 3))
     elif name == "read_url":
         return read_url(arguments.get("url", ""))
     elif name == "create_calendar_event":

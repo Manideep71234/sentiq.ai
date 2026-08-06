@@ -41,6 +41,7 @@ async def run_agent_loop(
     # 1. Inject memories and skills into system prompt
     
     system_prompt = "You are Sentiq.AI, an advanced intelligent agent.\n"
+    system_prompt += "You have a powerful `web_search` tool. Use it whenever a question requires current information, specific facts you are unsure about, or anything about specific real-world entities (people, places, institutions, companies). DO NOT GUESS or hallucinate tools.\n\n"
     if memories_content:
         system_prompt += "User's Long-term Memory:\n" + "\n".join([f"- {m}" for m in memories_content]) + "\n\n"
     if skills_info:
@@ -95,7 +96,11 @@ async def run_agent_loop(
             except json.JSONDecodeError:
                 args = {}
                 
-            yield {"type": "tool_status", "status": f"Agent is calling {tool_name}..."}
+            if tool_name == "web_search":
+                q = args.get('query', '')
+                yield {"type": "tool_status", "status": f"Searching the web for: {q}..."}
+            else:
+                yield {"type": "tool_status", "status": f"Agent is calling {tool_name}..."}
             
             result = ""
             if tool_name.startswith("mcp_"):
