@@ -1,15 +1,16 @@
 {
   "rewrites": [
-    { "source": "/auth/(.*)", "destination": "https://sentiq-ai.onrender.com/auth/$1" },
-    { "source": "/system/(.*)", "destination": "https://sentiq-ai.onrender.com/system/$1" },
-    { "source": "/chat/(.*)", "destination": "https://sentiq-ai.onrender.com/chat/$1" },
-    { "source": "/documents/(.*)", "destination": "https://sentiq-ai.onrender.com/documents/$1" },
-    { "source": "/email/(.*)", "destination": "https://sentiq-ai.onrender.com/email/$1" },
-    { "source": "/calendar/(.*)", "destination": "https://sentiq-ai.onrender.com/calendar/$1" },
-    { "source": "/notes/(.*)", "destination": "https://sentiq-ai.onrender.com/notes/$1" },
-    { "source": "/tasks/(.*)", "destination": "https://sentiq-ai.onrender.com/tasks/$1" },
-    { "source": "/scheduled-tasks/(.*)", "destination": "https://sentiq-ai.onrender.com/scheduled-tasks/$1" },
-    { "source": "/settings/(.*)", "destination": "https://sentiq-ai.onrender.com/settings/$1" },
+    { "source": "/auth/(.*)", "destination": "https://sentiqai-production.up.railway.app/auth/$1" },
+    { "source": "/system/(.*)", "destination": "https://sentiqai-production.up.railway.app/system/$1" },
+    { "source": "/chat/(.*)", "destination": "https://sentiqai-production.up.railway.app/chat/$1" },
+    { "source": "/documents/(.*)", "destination": "https://sentiqai-production.up.railway.app/documents/$1" },
+    { "source": "/email/(.*)", "destination": "https://sentiqai-production.up.railway.app/email/$1" },
+    { "source": "/calendar/(.*)", "destination": "https://sentiqai-production.up.railway.app/calendar/$1" },
+    { "source": "/notes/(.*)", "destination": "https://sentiqai-production.up.railway.app/notes/$1" },
+    { "source": "/tasks/(.*)", "destination": "https://sentiqai-production.up.railway.app/tasks/$1" },
+    { "source": "/scheduled-tasks/(.*)", "destination": "https://sentiqai-production.up.railway.app/scheduled-tasks/$1" },
+    { "source": "/settings/(.*)", "destination": "https://sentiqai-production.up.railway.app/settings/$1" },
+    { "source": "/login", "destination": "https://sentiqai-production.up.railway.app/login" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

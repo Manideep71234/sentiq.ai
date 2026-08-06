@@ -147,7 +147,7 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
       if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         return `ws://${window.location.host}`;
       }
-      return 'wss://sentiq-ai.onrender.com';
+      return 'wss://sentiqai-production.up.railway.app';
     };
     
     const wsUrl = isResearch 
