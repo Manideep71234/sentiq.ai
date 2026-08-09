@@ -35,6 +35,12 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
   }, [isProcessing]);
 
   useEffect(() => {
+    if (input === '' && inputRef.current) {
+      inputRef.current.style.height = 'auto';
+    }
+  }, [input]);
+
+  useEffect(() => {
     const renderer = new marked.Renderer();
     renderer.code = (code, language) => {
       const escapedCode = code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
@@ -465,11 +471,16 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
             ref={inputRef}
             className="chat-input"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => {
+              setInput(e.target.value);
+              e.target.style.height = 'auto';
+              e.target.style.height = Math.min(e.target.scrollHeight, window.innerHeight * 0.4) + 'px';
+            }}
             onKeyDown={handleKeyDown}
             placeholder={isResearch ? "Ask for deep research on any topic..." : "Send a message..."}
             rows={1}
             disabled={isProcessing}
+            style={{ overflowY: 'auto', minHeight: '56px', maxHeight: '40vh' }}
           />
           <div className="chat-form-footer">
             <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>

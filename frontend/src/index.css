@@ -172,6 +172,26 @@ h2 { font-size: 1.35rem; }
 h3 { font-size: 1.2rem; }
 h4 { font-size: 1.1rem; }
 
+/* Header Consistency */
+.chat-header, .view-header {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid var(--panel-border);
+  display: flex;
+  align-items: center;
+  background: transparent;
+  min-height: 72px;
+}
+
+.chat-header h2, .view-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 /* Sidebar */
 .sidebar {
   width: 280px;
@@ -756,8 +776,11 @@ h4 { font-size: 1.1rem; }
     display: block;
   }
   
-  .chat-header {
+  .chat-header, .view-header {
     padding-left: 3.5rem; /* Make room for hamburger */
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    padding-right: 1rem;
   }
   
   .chat-input-container {

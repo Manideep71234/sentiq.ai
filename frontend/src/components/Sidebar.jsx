@@ -24,8 +24,8 @@ export default function Sidebar({ activeView, setActiveView, user, toggleTheme, 
           </button>
         </div>
         
-        <nav style={{ flex: 1 }}>
-          <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+        <nav style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+          <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.25rem', paddingRight: '0.5rem' }}>
             {navItems.map(item => {
               const Icon = item.icon;
               return (

@@ -108,7 +108,7 @@ function App() {
             <Menu size={24} />
           </button>
           
-          {activeView !== 'documents' && activeView !== 'email' && activeView !== 'notes' && activeView !== 'calendar' && activeView !== 'settings' && activeView !== 'scheduled-tasks' && activeView !== 'api-keys' && activeView !== 'compare' && (
+          {activeView !== 'documents' && activeView !== 'email' && activeView !== 'notes' && activeView !== 'calendar' && activeView !== 'settings' && activeView !== 'scheduled-tasks' && activeView !== 'api-keys' && activeView !== 'compare' && activeView !== 'profile' && (
             <header className="chat-header">
               <h2>{activeView.charAt(0).toUpperCase() + activeView.slice(1)}</h2>
             </header>
