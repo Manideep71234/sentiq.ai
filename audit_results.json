@@ -1,0 +1,212 @@
+{
+  "errors": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to create chat session. Status: 401"
+    },
+    {
+      "type": "error",
+      "text": "Failed to fetch models: SyntaxError: Unexpected token '<', \"<!doctype \"... is not valid JSON"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to fetch models: SyntaxError: Unexpected token '<', \"<!doctype \"... is not valid JSON"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to create chat session. Status: 401"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "warning",
+      "text": "%s\n\n%s\n An error occurred in the <NotesTasksManager> component. Consider adding an error boundary to your tree to customize error handling behavior.\nVisit https://react.dev/link/error-boundaries to learn more about error boundaries."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to fetch models: SyntaxError: Unexpected token '<', \"<!doctype \"... is not valid JSON"
+    },
+    {
+      "type": "error",
+      "text": "Failed to fetch models: SyntaxError: Unexpected token '<', \"<!doctype \"... is not valid JSON"
+    },
+    {
+      "type": "error",
+      "text": "SyntaxError: Unexpected token '<', \"<!doctype \"... is not valid JSON"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "SyntaxError: Unexpected token '<', \"<!doctype \"... is not valid JSON"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    }
+  ],
+  "network_errors": [
+    {
+      "url": "http://localhost:5173/chat/sessions",
+      "status": 401
+    },
+    {
+      "url": "http://localhost:5173/documents/",
+      "status": 401
+    },
+    {
+      "url": "http://localhost:5173/email/account",
+      "status": 401
+    },
+    {
+      "url": "http://localhost:5173/notes/",
+      "status": 401
+    },
+    {
+      "url": "http://localhost:5173/chat/sessions",
+      "status": 401
+    },
+    {
+      "url": "http://localhost:5173/tasks/",
+      "status": 401
+    },
+    {
+      "url": "http://localhost:5173/calendar/account",
+      "status": 401
+    },
+    {
+      "url": "http://localhost:5173/scheduled-tasks/",
+      "status": 401
+    },
+    {
+      "url": "http://localhost:5173/scheduled-tasks/results",
+      "status": 401
+    },
+    {
+      "url": "http://localhost:5173/auth/me",
+      "status": 401
+    },
+    {
+      "url": "http://localhost:5173/email/account",
+      "status": 401
+    },
+    {
+      "url": "http://localhost:5173/documents/",
+      "status": 401
+    },
+    {
+      "url": "http://localhost:5173/auth/me",
+      "status": 401
+    },
+    {
+      "url": "http://localhost:5173/calendar/account",
+      "status": 401
+    },
+    {
+      "url": "http://localhost:5173/scheduled-tasks/results",
+      "status": 401
+    },
+    {
+      "url": "http://localhost:5173/scheduled-tasks/",
+      "status": 401
+    },
+    {
+      "url": "http://localhost:5173/tasks/",
+      "status": 401
+    },
+    {
+      "url": "http://localhost:5173/notes/",
+      "status": 401
+    },
+    {
+      "url": "http://localhost:5173/calendar/events",
+      "status": 401
+    },
+    {
+      "url": "http://localhost:5173/email/inbox",
+      "status": 401
+    },
+    {
+      "url": "http://localhost:5173/assets/index-CJWCFtYb.js",
+      "status": 404
+    }
+  ],
+  "ttft": null,
+  "mobile_ui": {}
+}

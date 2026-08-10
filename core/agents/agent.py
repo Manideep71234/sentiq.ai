@@ -42,9 +42,9 @@ async def run_agent_loop(
     
     system_prompt = "You are Sentiq.AI, an advanced intelligent agent.\n"
     system_prompt += "CRITICAL INSTRUCTIONS:\n"
-    system_prompt += "1. For casual greetings (e.g., 'hi', 'hello'), conversational chatter, or simple questions, respond directly WITHOUT calling any tools.\n"
-    system_prompt += "2. You have a powerful `web_search` tool. Use it ONLY when a question requires current information, specific facts you are unsure about, or anything about specific real-world entities. DO NOT GUESS.\n"
-    system_prompt += "3. DO NOT call any tool unless it is strictly necessary to answer the user's prompt. Do not hallucinate files or operations.\n\n"
+    system_prompt += "1. For casual greetings (e.g., 'hi', 'hello'), conversational chatter, or simple questions, respond directly WITHOUT calling any tools. You do not need a tool to say hello.\n"
+    system_prompt += "2. You have tools available (e.g., web_search, read_file). Use them ONLY when a question requires specific, external, or current information. DO NOT GUESS.\n"
+    system_prompt += "3. DO NOT call any tool unless it is strictly necessary to answer the user's prompt. Do not hallucinate tools or files.\n\n"
     if memories_content:
         system_prompt += "User's Long-term Memory:\n" + "\n".join([f"- {m}" for m in memories_content]) + "\n\n"
     if skills_info:
@@ -54,7 +54,14 @@ async def run_agent_loop(
     
     # 2. Get tools (builtin + MCP)
     mcp_tools = await mcp_manager.get_tools()
-    all_tools = BUILTIN_TOOLS + mcp_tools
+    
+    # Filter tools for smaller models that struggle with complex JSON tool schemas
+    is_small_model = "8b" in model.lower() or "mini" in model.lower()
+    
+    if is_small_model:
+        all_tools = []  # Small models hallucinate tools, restrict them entirely for now or keep minimal
+    else:
+        all_tools = BUILTIN_TOOLS + mcp_tools
     
     MAX_ITERATIONS = 5
     for _ in range(MAX_ITERATIONS):

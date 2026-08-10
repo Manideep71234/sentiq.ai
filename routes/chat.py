@@ -59,6 +59,39 @@ def sync_save_assistant_message(session_id: int, full_assistant_message: str):
             chat_session.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
         db.commit()
 
+async def auto_generate_title(session_id: int, user_id: int, user_message: str, provider_name: str, model: str, websocket: WebSocket):
+    from core.providers import get_provider
+    from core.models import UserSettings
+    with Session(engine) as db:
+        user_settings = db.exec(select(UserSettings).where(UserSettings.user_id == user_id)).first()
+    
+    provider = get_provider(provider_name, user_settings)
+    prompt = [
+        {"role": "system", "content": "You are a helpful assistant. Provide a very brief, 3 to 4 word summary title for the following message. ONLY output the title, no quotes, no extra text."},
+        {"role": "user", "content": user_message}
+    ]
+    
+    title = ""
+    try:
+        async for chunk in provider.generate_stream(prompt, model, []):
+            if chunk.get("type") == "content":
+                title += chunk.get("delta", "")
+                
+        title = title.strip().strip('"').strip("'")
+        if title:
+            with Session(engine) as db:
+                session_obj = db.exec(select(ChatSession).where(ChatSession.id == session_id)).first()
+                if session_obj:
+                    session_obj.title = title
+                    db.commit()
+            try:
+                await websocket.send_json({"type": "title_update", "title": title})
+            except:
+                pass
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Title generation failed: {e}")
+
 # WebSocket Endpoint
 async def get_ws_user(websocket: WebSocket) -> User | None:
     session_id = websocket.cookies.get("session_id")
@@ -127,6 +160,10 @@ async def websocket_chat(websocket: WebSocket, session_id: int):
 
             # Offload to prevent freezing the event loop
             messages = await asyncio.to_thread(sync_save_user_msg_and_load_history, session_id, user_message)
+            
+            # Auto-generate title if it's the first message
+            if len(messages) == 1:
+                asyncio.create_task(auto_generate_title(session_id, user.id, user_message, provider_name, model, websocket))
 
             t_db_done = time.time()
             import logging

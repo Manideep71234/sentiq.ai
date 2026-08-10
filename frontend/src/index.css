@@ -42,6 +42,22 @@
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
+/* Custom Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--panel-border);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
 body {
   font-family: 'Inter', sans-serif;
   background: var(--bg-gradient);
@@ -648,6 +664,14 @@ h4 { font-size: 1.1rem; }
   font-size: 0.9rem;
   box-shadow: var(--shadow-subtle);
   animation: fadeIn 0.3s ease-out forwards;
+}
+
+.fade-in {
+  animation: fadeIn 0.8s ease forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out forwards;
 }
 
 .processing-keyword {

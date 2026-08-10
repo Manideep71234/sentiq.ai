@@ -24,6 +24,7 @@ function App() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [showStartup, setShowStartup] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [chatTitle, setChatTitle] = useState('Chat');
 
   useEffect(() => {
     // Hide startup animation after 2.5s
@@ -37,10 +38,26 @@ function App() {
   }, [theme]);
 
   useEffect(() => {
-    const handleViewChange = (e) => setActiveView(e.detail);
+    const handleViewChange = (e) => {
+      setActiveView(e.detail);
+      if (e.detail === 'chat') {
+        setChatTitle('New Chat'); // or keep it 'Chat', we'll update it when session loads
+      }
+    };
+    
+    const handleTitleUpdate = (e) => {
+      if (activeView === 'chat') {
+        setChatTitle(e.detail.title || 'Chat');
+      }
+    };
+
     window.addEventListener('changeView', handleViewChange);
-    return () => window.removeEventListener('changeView', handleViewChange);
-  }, []);
+    window.addEventListener('chatTitleUpdated', handleTitleUpdate);
+    return () => {
+      window.removeEventListener('changeView', handleViewChange);
+      window.removeEventListener('chatTitleUpdated', handleTitleUpdate);
+    };
+  }, [activeView]);
 
   useEffect(() => {
     fetch('/auth/me')
@@ -110,7 +127,9 @@ function App() {
           
           {activeView !== 'documents' && activeView !== 'email' && activeView !== 'notes' && activeView !== 'calendar' && activeView !== 'settings' && activeView !== 'scheduled-tasks' && activeView !== 'api-keys' && activeView !== 'compare' && activeView !== 'profile' && (
             <header className="chat-header">
-              <h2>{activeView.charAt(0).toUpperCase() + activeView.slice(1)}</h2>
+              <h2 key={chatTitle} className="animate-fade-in">
+                {activeView === 'chat' ? chatTitle : activeView.charAt(0).toUpperCase() + activeView.slice(1)}
+              </h2>
             </header>
           )}
           

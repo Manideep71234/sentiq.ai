@@ -210,6 +210,7 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
       if (res.ok) {
         const data = await res.json();
         setSessionId(data.id);
+        window.dispatchEvent(new CustomEvent('chatTitleUpdated', { detail: { sessionId: data.id, title: 'New Chat' } }));
         return data.id;
       }
       console.error("Failed to create chat session. Status:", res.status);
@@ -219,6 +220,42 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
       return null;
     }
   };
+
+  const loadChatSession = async (id) => {
+    try {
+      const res = await fetch(`/chat/sessions/${id}/messages`);
+      if (res.ok) {
+        const data = await res.json();
+        const loadedMessages = data.map(m => ({
+          role: m.role,
+          content: m.content,
+          toolLogs: [] // we don't persist tool logs in this basic model, but we could
+        }));
+        setMessages(loadedMessages);
+        setSessionId(id);
+        
+        // Let App.jsx know we loaded this session to update the title
+        // We'd need to fetch the session title, but since Sidebar has it, maybe we don't need it or we can fetch the session object.
+        // Actually the backend `/chat/sessions` returns all sessions.
+      }
+    } catch (e) {
+      console.error("Failed to load chat session:", e);
+    }
+  };
+
+  useEffect(() => {
+    const handleLoadSession = (e) => {
+      if (e.detail.sessionId === null) {
+        setMessages([]);
+        initChatSession();
+      } else {
+        loadChatSession(e.detail.sessionId);
+        window.dispatchEvent(new CustomEvent('chatTitleUpdated', { detail: { sessionId: e.detail.sessionId, title: e.detail.title } }));
+      }
+    };
+    window.addEventListener('loadChatSession', handleLoadSession);
+    return () => window.removeEventListener('loadChatSession', handleLoadSession);
+  }, []);
 
   const connectWebSocket = (queryOverride = null, activeSessionId = null) => {
     if (ws) ws.close();
@@ -259,6 +296,8 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
       } else if (data.type === 'tool_status') {
         currentToolLogs.push(data.status);
         setToolLogs([...currentToolLogs]);
+      } else if (data.type === 'title_update') {
+        window.dispatchEvent(new CustomEvent('chatTitleUpdated', { detail: { sessionId: targetSessionId, title: data.title } }));
       } else if (data.type === 'done') {
         const finalContent = data.content || currentContent;
         setMessages(prev => [...prev, { role: 'assistant', content: finalContent, toolLogs: [...currentToolLogs] }]);
@@ -397,7 +436,7 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
       )}
 
       {/* Model Selector Bar */}
-      <div style={{ padding: '0.5rem 2rem', borderBottom: '1px solid var(--panel-border)', display: 'flex', gap: '1rem', background: 'transparent' }}>
+      <div style={{ padding: '0.5rem 2rem', borderBottom: '1px solid var(--panel-border)', display: 'flex', gap: '1rem', background: 'transparent', alignItems: 'center' }}>
         <Dropdown
           value={provider}
           onChange={setProvider}
@@ -410,6 +449,10 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
             onChange={setModel}
             options={getModelOptions(provider)}
           />
+        </div>
+
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+          <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{Math.ceil(input.length / 4)}</span> tokens
         </div>
       </div>
 
@@ -474,13 +517,15 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
             onChange={(e) => {
               setInput(e.target.value);
               e.target.style.height = 'auto';
-              e.target.style.height = Math.min(e.target.scrollHeight, window.innerHeight * 0.4) + 'px';
+              const maxH = window.innerHeight * 0.4;
+              e.target.style.height = Math.min(e.target.scrollHeight, maxH) + 'px';
+              e.target.style.overflowY = e.target.scrollHeight > maxH ? 'auto' : 'hidden';
             }}
             onKeyDown={handleKeyDown}
             placeholder={isResearch ? "Ask for deep research on any topic..." : "Send a message..."}
             rows={1}
             disabled={isProcessing}
-            style={{ overflowY: 'auto', minHeight: '56px', maxHeight: '40vh' }}
+            style={{ overflowY: 'hidden', minHeight: '56px', maxHeight: '40vh' }}
           />
           <div className="chat-form-footer">
             <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>

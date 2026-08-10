@@ -50,6 +50,9 @@ def save_memory(user_id: int, db: Session, content: str) -> str:
         return f"Error saving memory: {str(e)}"
 
 def web_search(query: str, max_results: int = 3) -> str:
+    from core.limiter import search_limiter
+    if not search_limiter.check_limit("global"):
+        return "Error: Rate limit exceeded for web search. Please wait before searching again."
     try:
         results = DDGS().text(query, max_results=max_results)
         if not results:

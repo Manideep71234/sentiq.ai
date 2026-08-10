@@ -47,6 +47,11 @@ async def websocket_research(websocket: WebSocket):
             if not query:
                 continue
 
+            from core.limiter import search_limiter
+            if not search_limiter.check_limit(str(user.id)):
+                await websocket.send_json({"error": "Search rate limit exceeded. Please try again later."})
+                continue
+
             with Session(engine) as db:
                 async for chunk in run_research_loop(query, user.id, db, provider_name, model):
                     await websocket.send_json(chunk)
