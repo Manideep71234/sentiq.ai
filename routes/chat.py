@@ -160,11 +160,6 @@ async def websocket_chat(websocket: WebSocket, session_id: int):
 
             # Offload to prevent freezing the event loop
             messages = await asyncio.to_thread(sync_save_user_msg_and_load_history, session_id, user_message)
-            
-            # Auto-generate title if it's the first message
-            if len(messages) == 1:
-                asyncio.create_task(auto_generate_title(session_id, user.id, user_message, provider_name, model, websocket))
-
             t_db_done = time.time()
             import logging
             logger = logging.getLogger(__name__)
@@ -185,6 +180,10 @@ async def websocket_chat(websocket: WebSocket, session_id: int):
             await asyncio.to_thread(sync_save_assistant_message, session_id, full_assistant_message)
             
             await websocket.send_json({"type": "done", "content": full_assistant_message})
+
+            # Auto-generate title if it's the first message, AFTER response is done to prevent concurrent 429s on strict APIs like Groq
+            if len(messages) == 1:
+                asyncio.create_task(auto_generate_title(session_id, user.id, user_message, provider_name, model, websocket))
 
         except Exception as e:
             import traceback
