@@ -25,6 +25,34 @@ def list_sessions(user: User = Depends(get_current_user), db: Session = Depends(
     sessions = db.exec(select(ChatSession).where(ChatSession.user_id == user.id).order_by(ChatSession.updated_at.desc())).all()
     return sessions
 
+from pydantic import BaseModel
+class ChatSessionUpdate(BaseModel):
+    title: str
+
+@router.put("/sessions/{session_id}")
+def update_session(session_id: int, update_data: ChatSessionUpdate, user: User = Depends(get_current_user), db: Session = Depends(get_session)):
+    session_obj = db.exec(select(ChatSession).where(ChatSession.id == session_id, ChatSession.user_id == user.id)).first()
+    if not session_obj:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    session_obj.title = update_data.title
+    db.add(session_obj)
+    db.commit()
+    db.refresh(session_obj)
+    return session_obj
+
+@router.delete("/sessions/{session_id}")
+def delete_session(session_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_session)):
+    session_obj = db.exec(select(ChatSession).where(ChatSession.id == session_id, ChatSession.user_id == user.id)).first()
+    if not session_obj:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Cascade delete is usually handled by the DB relationship, but we can explicitly delete messages too if needed.
+    # We will let SQLModel/SQLAlchemy handle it or just delete the session.
+    db.delete(session_obj)
+    db.commit()
+    return {"message": "Session deleted successfully"}
+
 @router.get("/sessions/{session_id}/messages")
 def get_messages(session_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_session)):
     session_obj = db.exec(select(ChatSession).where(ChatSession.id == session_id, ChatSession.user_id == user.id)).first()
