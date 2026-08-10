@@ -1,0 +1,25 @@
+<svg width="1024" height="256" viewBox="0 0 1024 256" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="aiGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00F2FE" />
+      <stop offset="100%" stop-color="#4FACFE" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  
+  <g transform="translate(32, 32) scale(0.375)">
+    <g filter="url(#glow)">
+      <path d="M350,150 C350,50 162,50 162,150 C162,250 350,250 350,350 C350,450 162,450 162,350" fill="none" stroke="url(#aiGrad)" stroke-width="48" stroke-linecap="round"/>
+      <circle cx="350" cy="150" r="28" fill="#FFFFFF"/>
+      <circle cx="256" cy="250" r="28" fill="#FFFFFF"/>
+      <circle cx="162" cy="350" r="28" fill="#FFFFFF"/>
+    </g>
+  </g>
+  
+  <text x="256" y="160" font-family="'Outfit', sans-serif" font-size="112" font-weight="700" fill="#F8FAFC" letter-spacing="-2">
+    Sentiq.AI
+  </text>
+</svg>
