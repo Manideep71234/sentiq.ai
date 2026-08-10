@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Menu } from 'lucide-react';
 import Sidebar from './components/Sidebar';
+import MouseTracker from './components/MouseTracker';
 import ChatView from './components/ChatView';
 
 import DocumentManager from './components/DocumentManager';
@@ -55,9 +56,9 @@ function App() {
   const [activeView, setActiveView] = useState('chat');
   const [user, setUser] = useState({ username: 'Loading...' });
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [showStartup, setShowStartup] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [chatTitle, setChatTitle] = useState('Chat');
 
   useEffect(() => {
@@ -108,21 +109,14 @@ function App() {
         window.location.href = '/login';
       });
   }, []);
-
-  const handleMouseMove = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    setMousePos({ 
-      x: e.clientX - rect.left, 
-      y: e.clientY - rect.top 
-    });
-  };
+  }, []);
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
 
   return (
-    <div className="app-wrapper" onMouseMove={handleMouseMove}>
+    <div className="app-wrapper">
       {showStartup && (
         <div className={`startup-overlay ${!showStartup ? 'fade-out' : ''}`}>
           <svg className="handwriting-svg" viewBox="0 0 400 100">
@@ -133,14 +127,8 @@ function App() {
         </div>
       )}
       
-      <div className="app-container fade-in" onMouseMove={handleMouseMove}>
-        <div 
-          className="mouse-glow" 
-          style={{ 
-            left: `${mousePos.x}px`, 
-            top: `${mousePos.y}px` 
-          }} 
-        />
+      <div className="app-container fade-in">
+        <MouseTracker />
         <Sidebar 
           activeView={activeView} 
           setActiveView={setActiveView} 
@@ -149,6 +137,8 @@ function App() {
           theme={theme} 
           isOpen={isSidebarOpen}
           setIsOpen={setIsSidebarOpen}
+          isCollapsed={isSidebarCollapsed}
+          setIsCollapsed={setIsSidebarCollapsed}
         />
         
         <main className="main-content" style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>

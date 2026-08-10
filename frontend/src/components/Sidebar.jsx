@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { MessageSquare, Globe, FileText, Mail, FileEdit, Calendar, GitCompare, Settings, LogOut, Key, Plus, Edit2, Trash2, Check, X } from 'lucide-react';
+import { MessageSquare, Globe, FileText, Mail, FileEdit, Calendar, GitCompare, Settings, LogOut, Key, Plus, Edit2, Trash2, Check, X, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 
-export default function Sidebar({ activeView, setActiveView, user, toggleTheme, theme, isOpen, setIsOpen }) {
+export default function Sidebar({ activeView, setActiveView, user, toggleTheme, theme, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) {
   const navItems = [
     { id: 'chat', icon: MessageSquare, label: 'Chat' },
     { id: 'research', icon: Globe, label: 'Research' },
@@ -73,12 +73,19 @@ export default function Sidebar({ activeView, setActiveView, user, toggleTheme, 
   return (
     <>
       <div className={`sidebar-overlay ${isOpen ? 'open' : ''}`} onClick={() => setIsOpen(false)} />
-      <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+      <aside className={`sidebar ${isOpen ? 'open' : ''} ${isCollapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-header">
-          <span>Sentiq<span style={{ color: 'var(--accent-color)' }}>.AI</span></span>
-          <button className="theme-toggle" onClick={toggleTheme} title="Toggle Theme">
-            {theme === 'dark' ? '☀️' : '🌙'}
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span>Sentiq<span style={{ color: 'var(--accent-color)' }}>.AI</span></span>
+          </div>
+          <div style={{ display: 'flex', gap: '0.25rem' }}>
+            <button className="theme-toggle" onClick={() => setIsCollapsed(!isCollapsed)} title="Toggle Sidebar">
+              {isCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+            </button>
+            <button className="theme-toggle" onClick={toggleTheme} title="Toggle Theme" style={isCollapsed ? { display: 'none' } : {}}>
+              {theme === 'dark' ? '☀️' : '🌙'}
+            </button>
+          </div>
         </div>
         
         <nav style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
@@ -95,18 +102,20 @@ export default function Sidebar({ activeView, setActiveView, user, toggleTheme, 
                       }
                       setActiveView(item.id);
                       setIsOpen(false);
+                      setIsCollapsed(false);
                     }}
                     style={item.id === 'chat' ? { display: 'flex', justifyContent: 'space-between', width: '100%' } : {}}
+                    title={isCollapsed ? item.label : undefined}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <Icon size={18} />
-                      {item.label}
+                      <Icon size={18} style={{ flexShrink: 0 }} />
+                      <span className="nav-label">{item.label}</span>
                     </div>
                     {item.id === 'chat' && activeView === 'chat' && (
-                      <Plus size={16} style={{ opacity: 0.7 }} />
+                      <Plus className="nav-extra" size={16} style={{ opacity: 0.7, flexShrink: 0 }} />
                     )}
                   </button>
-                  {item.id === 'chat' && activeView === 'chat' && chatSessions.length > 0 && (
+                  {item.id === 'chat' && activeView === 'chat' && chatSessions.length > 0 && !isCollapsed && (
                     <ul style={{ listStyle: 'none', paddingLeft: '2.5rem', marginTop: '0.25rem', display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
                       {chatSessions.map(session => (
                         <li 
@@ -195,11 +204,11 @@ export default function Sidebar({ activeView, setActiveView, user, toggleTheme, 
               {user.username?.charAt(0).toUpperCase()}
             </div>
           )}
-          <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div className="nav-label" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-color)', lineHeight: '1.2', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {(user.full_name || user.username)?.includes('@') ? (user.full_name || user.username).split('@')[0].toUpperCase() : (user.full_name || user.username)}
             </span>
-            <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
               Manage Profile
             </span>
           </div>
@@ -212,7 +221,7 @@ export default function Sidebar({ activeView, setActiveView, user, toggleTheme, 
           }}
           style={{ width: '100%', marginTop: '0.5rem', justifyContent: 'center' }}
         >
-          <LogOut size={16} /> Logout
+          <LogOut size={16} style={{ flexShrink: 0 }} /> <span className="nav-label">Logout</span>
         </button>
       </div>
     </aside>
