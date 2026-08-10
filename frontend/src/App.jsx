@@ -13,9 +13,43 @@ import CompareView from './components/CompareView';
 import ProfileView from './components/ProfileView';
 import LoginView from './components/LoginView';
 
+function LogoutView() {
+  return (
+    <div className="app-wrapper" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="app-container fade-in" style={{ maxWidth: '500px', height: 'auto', padding: '40px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
+        <svg className="handwriting-svg" viewBox="0 0 400 100" style={{ width: '200px', height: 'auto', marginBottom: '10px' }}>
+          <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="handwriting-text">
+            Sentiq.AI
+          </text>
+        </svg>
+        <h2 style={{ color: 'var(--text-primary)', marginBottom: '10px' }}>Thanks for using our AI!</h2>
+        <p style={{ color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+          You have been successfully logged out of your session. We hope to see you again soon.
+        </p>
+        <button 
+          onClick={() => window.location.href = '/login'}
+          style={{
+            marginTop: '10px', width: '100%', padding: '14px', background: 'var(--accent-color)', color: 'white',
+            border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '1rem',
+            transition: 'opacity 0.2s'
+          }}
+          onMouseOver={(e) => e.target.style.opacity = '0.9'}
+          onMouseOut={(e) => e.target.style.opacity = '1'}
+        >
+          Return to Login
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   if (window.location.pathname === '/login') {
     return <LoginView />;
+  }
+  
+  if (window.location.pathname === '/logout-success') {
+    return <LogoutView />;
   }
 
   const [activeView, setActiveView] = useState('chat');

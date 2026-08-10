@@ -126,7 +126,10 @@ export default function Sidebar({ activeView, setActiveView, user, toggleTheme, 
         </button>
         <button 
           className="nav-item"
-          onClick={() => window.location.href = '/auth/logout'}
+          onClick={async () => {
+            await fetch('/auth/logout', { method: 'POST' });
+            window.location.href = '/logout-success';
+          }}
           style={{ width: '100%', marginTop: '0.5rem', justifyContent: 'center' }}
         >
           <LogOut size={16} /> Logout
