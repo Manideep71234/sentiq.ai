@@ -96,7 +96,7 @@ export default function MouseTracker() {
       {/* Main mouse dot */}
       <div 
         ref={glowRef}
-        className="mouse-glow" 
+        className="custom-mouse-dot" 
         style={{
           pointerEvents: 'none',
           zIndex: 99999,

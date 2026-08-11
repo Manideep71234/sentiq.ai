@@ -134,8 +134,8 @@ function App() {
         </div>
       )}
 
+      <MouseTracker />
       <div className="app-container fade-in">
-        <MouseTracker />
         <Sidebar
           activeView={activeView}
           setActiveView={setActiveView}
