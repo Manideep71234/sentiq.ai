@@ -1,9 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const TRAIL_LENGTH = 15;
 
 export default function MouseTracker() {
   const glowRef = useRef(null);
+  const [isHovering, setIsHovering] = useState(false);
   
   // Array of trail dots refs
   const trailRefs = useRef([]);
@@ -12,14 +13,16 @@ export default function MouseTracker() {
   const mouse = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
-    // Hide default cursor across the app
-    document.body.style.cursor = 'none';
+    // Hide default cursor across the app by injecting a global style
+    const style = document.createElement('style');
+    style.innerHTML = `* { cursor: none !important; }`;
+    document.head.appendChild(style);
 
     const handleMouseMove = (e) => {
-      const rect = document.body.getBoundingClientRect();
+      // Use clientX/Y directly for position: fixed
       mouse.current = {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
+        x: e.clientX,
+        y: e.clientY
       };
       
       // Instantly update the main dot
@@ -27,9 +30,23 @@ export default function MouseTracker() {
         glowRef.current.style.left = `${mouse.current.x}px`;
         glowRef.current.style.top = `${mouse.current.y}px`;
       }
+
+      // Check if hovering over clickable element
+      const target = e.target;
+      const isClickable = target && (
+        target.tagName === 'BUTTON' || 
+        target.tagName === 'A' || 
+        target.tagName === 'INPUT' || 
+        target.tagName === 'SELECT' || 
+        target.closest('button') || 
+        target.closest('a') ||
+        window.getComputedStyle(target).cursor === 'pointer'
+      );
+      
+      setIsHovering(!!isClickable);
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
 
     let animationFrameId;
     const animateTrail = () => {
@@ -68,7 +85,7 @@ export default function MouseTracker() {
     animateTrail();
 
     return () => {
-      document.body.style.cursor = 'auto';
+      document.head.removeChild(style);
       window.removeEventListener('mousemove', handleMouseMove);
       cancelAnimationFrame(animationFrameId);
     };
@@ -82,14 +99,16 @@ export default function MouseTracker() {
         className="mouse-glow" 
         style={{
           pointerEvents: 'none',
-          zIndex: 9999,
-          position: 'absolute',
+          zIndex: 99999,
+          position: 'fixed', // Use fixed for perfect viewport alignment
           transform: 'translate(-50%, -50%)',
-          width: '5px',
-          height: '5px',
-          background: '#fff',
+          width: isHovering ? '12px' : '5px',
+          height: isHovering ? '12px' : '5px',
+          background: isHovering ? 'transparent' : '#fff',
+          border: isHovering ? '2px solid var(--accent-color)' : 'none',
           borderRadius: '50%',
-          boxShadow: '0 0 10px #fff, 0 0 20px var(--accent-color)'
+          boxShadow: isHovering ? 'none' : '0 0 10px #fff, 0 0 20px var(--accent-color)',
+          transition: 'width 0.2s ease, height 0.2s ease, background 0.2s ease, border 0.2s ease'
         }} 
       />
       
@@ -105,15 +124,16 @@ export default function MouseTracker() {
             ref={el => trailRefs.current[index] = el}
             style={{
               pointerEvents: 'none',
-              zIndex: 9998 - index,
-              position: 'absolute',
+              zIndex: 99998 - index,
+              position: 'fixed',
               transform: 'translate(-50%, -50%)',
               width: `${size}px`,
               height: `${size}px`,
               background: 'var(--accent-color)',
-              opacity: opacity * 0.7,
+              opacity: isHovering ? 0 : opacity * 0.7, // Hide tail when hovering
               borderRadius: '50%',
-              boxShadow: `0 0 ${size * 2}px var(--accent-color)`
+              boxShadow: `0 0 ${size * 2}px var(--accent-color)`,
+              transition: 'opacity 0.2s ease'
             }} 
           />
         );
