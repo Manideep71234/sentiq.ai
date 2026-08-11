@@ -1,14 +1,20 @@
 import { useEffect, useRef } from 'react';
 
+const TRAIL_LENGTH = 15;
+
 export default function MouseTracker() {
   const glowRef = useRef(null);
-  const trailRef = useRef(null);
   
-  // Track mouse and trail positions
+  // Array of trail dots refs
+  const trailRefs = useRef([]);
+  // We keep a mutable array of positions for the trail
+  const trailPositions = useRef(Array(TRAIL_LENGTH).fill({ x: 0, y: 0 }));
   const mouse = useRef({ x: 0, y: 0 });
-  const trail = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
+    // Hide default cursor across the app
+    document.body.style.cursor = 'none';
+
     const handleMouseMove = (e) => {
       const rect = document.body.getBoundingClientRect();
       mouse.current = {
@@ -16,7 +22,7 @@ export default function MouseTracker() {
         y: e.clientY - rect.top
       };
       
-      // Instantly update the glow (main cursor)
+      // Instantly update the main dot
       if (glowRef.current) {
         glowRef.current.style.left = `${mouse.current.x}px`;
         glowRef.current.style.top = `${mouse.current.y}px`;
@@ -25,24 +31,44 @@ export default function MouseTracker() {
 
     window.addEventListener('mousemove', handleMouseMove);
 
-    // Animation loop for the trail
     let animationFrameId;
     const animateTrail = () => {
-      // Ease the trail position towards the mouse position
-      trail.current.x += (mouse.current.x - trail.current.x) * 0.15;
-      trail.current.y += (mouse.current.y - trail.current.y) * 0.15;
-
-      if (trailRef.current) {
-        trailRef.current.style.left = `${trail.current.x}px`;
-        trailRef.current.style.top = `${trail.current.y}px`;
+      // The first point follows the mouse
+      let nextX = mouse.current.x;
+      let nextY = mouse.current.y;
+      
+      // Update each trail point to follow the previous one
+      const updatedPositions = [...trailPositions.current];
+      
+      for (let i = 0; i < TRAIL_LENGTH; i++) {
+        const current = updatedPositions[i];
+        
+        // Easing factor: points closer to the head follow faster, tail follows slower
+        const ease = 0.35 - (i * 0.015);
+        
+        current.x += (nextX - current.x) * ease;
+        current.y += (nextY - current.y) * ease;
+        
+        // Apply position to DOM node
+        const ref = trailRefs.current[i];
+        if (ref) {
+          ref.style.left = `${current.x}px`;
+          ref.style.top = `${current.y}px`;
+        }
+        
+        // The next point follows this current point
+        nextX = current.x;
+        nextY = current.y;
       }
-
+      
+      trailPositions.current = updatedPositions;
       animationFrameId = requestAnimationFrame(animateTrail);
     };
     
     animateTrail();
 
     return () => {
+      document.body.style.cursor = 'auto';
       window.removeEventListener('mousemove', handleMouseMove);
       cancelAnimationFrame(animationFrameId);
     };
@@ -50,6 +76,7 @@ export default function MouseTracker() {
 
   return (
     <>
+      {/* Main mouse dot */}
       <div 
         ref={glowRef}
         className="mouse-glow" 
@@ -58,28 +85,39 @@ export default function MouseTracker() {
           zIndex: 9999,
           position: 'absolute',
           transform: 'translate(-50%, -50%)',
-          width: '8px',
-          height: '8px',
-          background: 'var(--accent-color)',
+          width: '5px',
+          height: '5px',
+          background: '#fff',
           borderRadius: '50%',
-          boxShadow: '0 0 10px var(--accent-color), 0 0 20px var(--accent-color)'
+          boxShadow: '0 0 10px #fff, 0 0 20px var(--accent-color)'
         }} 
       />
-      <div 
-        ref={trailRef}
-        className="mouse-trail" 
-        style={{
-          pointerEvents: 'none',
-          zIndex: 9998,
-          position: 'absolute',
-          transform: 'translate(-50%, -50%)',
-          width: '24px',
-          height: '24px',
-          border: '2px solid rgba(99, 102, 241, 0.4)',
-          borderRadius: '50%',
-          transition: 'width 0.2s, height 0.2s'
-        }} 
-      />
+      
+      {/* Comet trail */}
+      {Array.from({ length: TRAIL_LENGTH }).map((_, index) => {
+        // Calculate decreasing size and opacity for the tail
+        const size = Math.max(1, 8 - (index * 0.45));
+        const opacity = 1 - (index / TRAIL_LENGTH);
+        
+        return (
+          <div 
+            key={index}
+            ref={el => trailRefs.current[index] = el}
+            style={{
+              pointerEvents: 'none',
+              zIndex: 9998 - index,
+              position: 'absolute',
+              transform: 'translate(-50%, -50%)',
+              width: `${size}px`,
+              height: `${size}px`,
+              background: 'var(--accent-color)',
+              opacity: opacity * 0.7,
+              borderRadius: '50%',
+              boxShadow: `0 0 ${size * 2}px var(--accent-color)`
+            }} 
+          />
+        );
+      })}
     </>
   );
 }
