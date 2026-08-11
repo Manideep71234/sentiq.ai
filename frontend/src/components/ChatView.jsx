@@ -250,6 +250,8 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
   };
 
   useEffect(() => {
+    if (isResearch) return; // Research view shouldn't handle chat sessions
+
     const handleLoadSession = (e) => {
       if (e.detail.sessionId === null) {
         setMessages([]);

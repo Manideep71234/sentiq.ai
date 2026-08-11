@@ -137,14 +137,16 @@ export default function Sidebar({ activeView, setActiveView, user, toggleTheme, 
                                   autoFocus
                                   value={editingTitle}
                                   onChange={(e) => setEditingTitle(e.target.value)}
+                                  onClick={(e) => e.stopPropagation()}
                                   onKeyDown={(e) => {
+                                    e.stopPropagation();
                                     if (e.key === 'Enter') handleEditSave(session.id);
                                     if (e.key === 'Escape') setEditingSessionId(null);
                                   }}
-                                  style={{ flex: 1, background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '2px 4px', fontSize: '0.85rem' }}
+                                  style={{ flex: 1, background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--accent-color)', outline: 'none', borderRadius: '4px', padding: '4px 6px', fontSize: '0.85rem', width: '100%' }}
                                 />
-                                <button onClick={() => handleEditSave(session.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex' }}><Check size={14} /></button>
-                                <button onClick={() => setEditingSessionId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex' }}><X size={14} /></button>
+                                <button type="button" onClick={(e) => { e.stopPropagation(); handleEditSave(session.id); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', padding: '2px' }}><Check size={14} /></button>
+                                <button type="button" onClick={(e) => { e.stopPropagation(); setEditingSessionId(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', padding: '2px' }}><X size={14} /></button>
                               </div>
                             ) : (
                               <>
