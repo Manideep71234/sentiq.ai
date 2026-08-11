@@ -239,7 +239,15 @@ h4 { font-size: 1.1rem; }
 
 .sidebar.collapsed .nav-item .nav-label,
 .sidebar.collapsed .nav-item .nav-extra {
+  display: none !important;
+}
+
+.sidebar.collapsed nav::-webkit-scrollbar {
   display: none;
+}
+.sidebar.collapsed nav {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .sidebar.collapsed .sidebar-footer img {
