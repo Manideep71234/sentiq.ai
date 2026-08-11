@@ -11,6 +11,16 @@ class User(SQLModel, table=True):
     is_admin: bool = Field(default=False)
     profile_pic: Optional[str] = Field(default=None)
     full_name: Optional[str] = Field(default=None)
+    is_active: bool = Field(default=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    last_login: Optional[datetime] = None
+
+class AuditLog(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: Optional[int] = Field(default=None, index=True)
+    event_type: str = Field(index=True)
+    metadata_json: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
 class PasskeyCredential(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

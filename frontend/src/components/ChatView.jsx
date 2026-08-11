@@ -102,6 +102,7 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
   const providerOptions = [
     { value: 'openrouter', label: 'OpenRouter' },
     { value: 'groq', label: 'Groq' },
+    { value: 'gemini', label: 'Google Gemini' },
     { value: 'ollama', label: 'Ollama (Local)' }
   ];
 
@@ -156,6 +157,11 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
       return [
         { value: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B (Groq)' },
         { value: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B (Groq)' }
+      ];
+    } else if (prov === 'gemini') {
+      return [
+        { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
+        { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' }
       ];
     } else {
       return openRouterModels;

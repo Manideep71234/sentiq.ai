@@ -186,6 +186,12 @@ async def websocket_chat(websocket: WebSocket, session_id: int):
             if not user_message:
                 continue
 
+            if provider_name == "gemini":
+                from core.limiter import gemini_limiter
+                if not gemini_limiter.check_limit(str(user.id)):
+                    await websocket.send_json({"error": "Free tier Gemini rate limit exceeded (15 RPM). Please wait a minute or use another provider."})
+                    continue
+
             # Offload to prevent freezing the event loop
             messages = await asyncio.to_thread(sync_save_user_msg_and_load_history, session_id, user_message)
             t_db_done = time.time()

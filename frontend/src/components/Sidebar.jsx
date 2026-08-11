@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MessageSquare, Globe, FileText, Mail, FileEdit, Calendar, GitCompare, Settings, LogOut, Key, Plus, Edit2, Trash2, Check, X, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { MessageSquare, Globe, FileText, Mail, FileEdit, Calendar, GitCompare, Settings, LogOut, Key, Plus, Edit2, Trash2, Check, X, PanelLeftClose, PanelLeftOpen, Shield } from 'lucide-react';
 
 export default function Sidebar({ activeView, setActiveView, user, toggleTheme, theme, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) {
   const navItems = [
@@ -13,6 +13,10 @@ export default function Sidebar({ activeView, setActiveView, user, toggleTheme, 
     { id: 'api-keys', icon: Key, label: 'API Keys' },
     { id: 'settings', icon: Settings, label: 'Settings' },
   ];
+
+  if (user && user.is_admin) {
+    navItems.push({ id: 'admin', icon: Shield, label: 'Admin Panel' });
+  }
 
   const [chatSessions, setChatSessions] = useState([]);
   const [editingSessionId, setEditingSessionId] = useState(null);

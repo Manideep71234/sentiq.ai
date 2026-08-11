@@ -89,6 +89,9 @@ async def google_callback(request: Request, db: Session = Depends(get_session)):
     
     db.commit()
     
+    from core.audit import log_event
+    log_event(db, user_id, "email_account_connected", {"provider": "google", "email": email_address})
+    
     return RedirectResponse(url="/?tab=email&status=connected")
 
 @router.get("/account")
@@ -128,6 +131,10 @@ def save_account(data: dict, user: User = Depends(get_current_user), db: Session
         account.encrypted_password = encrypt_string(data["password"])
         
     db.commit()
+    
+    from core.audit import log_event
+    log_event(db, user.id, "email_account_connected", {"provider": "imap", "email": account.username})
+    
     return {"status": "success"}
 
 @router.get("/inbox")

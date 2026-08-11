@@ -3,6 +3,7 @@ import { Menu } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import MouseTracker from './components/MouseTracker';
 import ChatView from './components/ChatView';
+import AdminPanel from './components/AdminPanel';
 
 import DocumentManager from './components/DocumentManager';
 import EmailManager from './components/EmailManager';
@@ -27,7 +28,7 @@ function LogoutView() {
         <p style={{ color: 'var(--text-secondary)', lineHeight: '1.5' }}>
           You have been successfully logged out of your session. We hope to see you again soon.
         </p>
-        <button 
+        <button
           onClick={() => window.location.href = '/login'}
           style={{
             marginTop: '10px', width: '100%', padding: '14px', background: 'var(--accent-color)', color: 'white',
@@ -48,7 +49,7 @@ function App() {
   if (window.location.pathname === '/login') {
     return <LoginView />;
   }
-  
+
   if (window.location.pathname === '/logout-success') {
     return <LogoutView />;
   }
@@ -79,7 +80,7 @@ function App() {
         setChatTitle('New Chat'); // or keep it 'Chat', we'll update it when session loads
       }
     };
-    
+
     const handleTitleUpdate = (e) => {
       if (activeView === 'chat') {
         setChatTitle(e.detail.title || 'Chat');
@@ -109,7 +110,6 @@ function App() {
         window.location.href = '/login';
       });
   }, []);
-  }, []);
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
@@ -126,37 +126,37 @@ function App() {
           </svg>
         </div>
       )}
-      
+
       <div className="app-container fade-in">
         <MouseTracker />
-        <Sidebar 
-          activeView={activeView} 
-          setActiveView={setActiveView} 
-          user={user} 
-          toggleTheme={toggleTheme} 
-          theme={theme} 
+        <Sidebar
+          activeView={activeView}
+          setActiveView={setActiveView}
+          user={user}
+          toggleTheme={toggleTheme}
+          theme={theme}
           isOpen={isSidebarOpen}
           setIsOpen={setIsSidebarOpen}
           isCollapsed={isSidebarCollapsed}
           setIsCollapsed={setIsSidebarCollapsed}
         />
-        
+
         <main className="main-content" style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
-          <button 
-            className="mobile-menu-btn" 
+          <button
+            className="mobile-menu-btn"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           >
             <Menu size={24} />
           </button>
-          
-          {activeView !== 'documents' && activeView !== 'email' && activeView !== 'notes' && activeView !== 'calendar' && activeView !== 'settings' && activeView !== 'scheduled-tasks' && activeView !== 'api-keys' && activeView !== 'compare' && activeView !== 'profile' && (
+
+          {activeView !== 'documents' && activeView !== 'email' && activeView !== 'notes' && activeView !== 'calendar' && activeView !== 'settings' && activeView !== 'scheduled-tasks' && activeView !== 'api-keys' && activeView !== 'compare' && activeView !== 'profile' && activeView !== 'admin' && (
             <header className="chat-header">
               <h2 key={chatTitle} className="animate-fade-in">
                 {activeView === 'chat' ? chatTitle : activeView.charAt(0).toUpperCase() + activeView.slice(1)}
               </h2>
             </header>
           )}
-          
+
           <div className="view-transition" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{ display: activeView === 'chat' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
               <ChatView activeView={activeView} setActiveView={setActiveView} />
@@ -187,6 +187,9 @@ function App() {
             </div>
             <div style={{ display: activeView === 'compare' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
               <CompareView />
+            </div>
+            <div style={{ display: activeView === 'admin' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
+              <AdminPanel user={user} />
             </div>
           </div>
         </main>

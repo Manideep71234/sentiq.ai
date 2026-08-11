@@ -24,6 +24,7 @@ from routes.notes import router as notes_router
 from routes.tasks import router as tasks_router
 from routes.scheduled_tasks import router as scheduled_tasks_router
 from routes.settings import router as settings_router
+from routes.admin import router as admin_router
 
 from core.scheduler import start_scheduler, sync_db_tasks
 
@@ -42,6 +43,20 @@ async def lifespan(app: FastAPI):
             
     # Initialize Database
     SQLModel.metadata.create_all(engine)
+    
+    # Manual Schema Migration for SQLite (adding new columns to User table)
+    from sqlalchemy import text
+    with Session(engine) as session:
+        try:
+            # Check if is_active column exists
+            session.exec(text("SELECT is_active FROM user LIMIT 1"))
+        except Exception:
+            # Column doesn't exist, we must be on an older version. Alter table!
+            session.exec(text("ALTER TABLE user ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT 1"))
+            session.exec(text("ALTER TABLE user ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP"))
+            session.exec(text("ALTER TABLE user ADD COLUMN last_login DATETIME"))
+            session.commit()
+            logger.info("Migrated user table to add is_active, created_at, and last_login.")
     
     # Start scheduler
     start_scheduler()
@@ -110,3 +125,4 @@ app.include_router(notes_router)
 app.include_router(tasks_router)
 app.include_router(scheduled_tasks_router)
 app.include_router(settings_router)
+app.include_router(admin_router)

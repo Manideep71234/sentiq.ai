@@ -88,4 +88,17 @@ async def update_api_keys(keys: APIKeysUpdate, user: User = Depends(get_current_
     settings.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     db.commit()
     
+    from core.audit import log_event
+    if keys.groq_api_key is not None:
+        if keys.groq_api_key == "":
+            log_event(db, user.id, "api_key_removed", {"provider": "groq"})
+        else:
+            log_event(db, user.id, "api_key_added", {"provider": "groq"})
+            
+    if keys.openrouter_api_key is not None:
+        if keys.openrouter_api_key == "":
+            log_event(db, user.id, "api_key_removed", {"provider": "openrouter"})
+        else:
+            log_event(db, user.id, "api_key_added", {"provider": "openrouter"})
+    
     return {"message": "API keys saved and validated successfully."}

@@ -466,3 +466,63 @@ async def google_callback(code: str, response: Response, db: Session = Depends(g
     
     return response
 
+
+from typing import Optional
+
+class AccountUpdate(BaseModel):
+    username: Optional[str] = None
+    email: Optional[str] = None
+
+@router.put("/me/account")
+def update_account(data: AccountUpdate, request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_session)):
+    if data.username and data.username != user.username:
+        existing = db.exec(select(User).where(User.username == data.username)).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Username is already taken")
+        user.username = data.username
+        
+    if data.email and data.email != user.email:
+        existing = db.exec(select(User).where(User.email == data.email)).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Email is already in use")
+        user.email = data.email
+        
+    db.add(user)
+    db.commit()
+    return {"message": "Account updated successfully"}
+
+class PasswordUpdate(BaseModel):
+    current_password: str
+    new_password: str
+
+@router.put("/me/password")
+def update_password(data: PasswordUpdate, request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_session)):
+    if not verify_password(data.current_password, user.password_hash):
+        raise HTTPException(status_code=400, detail="Incorrect current password")
+        
+    user.password_hash = get_password_hash(data.new_password)
+    db.add(user)
+    db.commit()
+    
+    from core.audit import log_event
+    log_event(db, user.id, "password_changed", {})
+    return {"message": "Password updated successfully"}
+
+@router.delete("/me")
+def delete_my_account(request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_session)):
+    from core.auth import cascade_delete_user
+    from fastapi.responses import JSONResponse
+    import os
+    session_id = request.cookies.get("session_id")
+    
+    cascade_delete_user(db, user)
+    
+    response = JSONResponse(content={"message": "Account deleted successfully"})
+    if session_id:
+        response.delete_cookie(
+            key="session_id",
+            httponly=True,
+            samesite="lax",
+            secure=os.environ.get("COOKIE_SECURE", "true").lower() == "true"
+        )
+    return response

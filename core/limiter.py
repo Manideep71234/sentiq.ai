@@ -22,3 +22,4 @@ class SearchRateLimiter:
         return True
 
 search_limiter = SearchRateLimiter(max_requests=10, window_seconds=60)
+gemini_limiter = SearchRateLimiter(max_requests=15, window_seconds=60)
