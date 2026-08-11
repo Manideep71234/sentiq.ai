@@ -91,6 +91,10 @@ function App() {
   }, [activeView]);
 
   useEffect(() => {
+    if (window.location.pathname === '/login' || window.location.pathname === '/logout-success') {
+      return;
+    }
+
     fetch('/auth/me')
       .then(res => res.json())
       .then(data => {
