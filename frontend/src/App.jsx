@@ -46,14 +46,6 @@ function LogoutView() {
 }
 
 function App() {
-  if (window.location.pathname === '/login') {
-    return <LoginView />;
-  }
-
-  if (window.location.pathname === '/logout-success') {
-    return <LogoutView />;
-  }
-
   const [activeView, setActiveView] = useState('chat');
   const [user, setUser] = useState({ username: 'Loading...' });
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
@@ -67,6 +59,9 @@ function App() {
     const timer = setTimeout(() => setShowStartup(false), 2500);
     return () => clearTimeout(timer);
   }, []);
+
+
+
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -110,6 +105,14 @@ function App() {
         window.location.href = '/login';
       });
   }, []);
+
+  if (window.location.pathname === '/login') {
+    return <LoginView />;
+  }
+
+  if (window.location.pathname === '/logout-success') {
+    return <LogoutView />;
+  }
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
