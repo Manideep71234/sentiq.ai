@@ -66,7 +66,7 @@ async def lifespan(app: FastAPI):
     with Session(engine) as session:
         admin_user = session.exec(select(User).where(User.username == "admin")).first()
         if not admin_user:
-            password = generate_random_password()
+            password = os.environ.get("DEFAULT_ADMIN_PASSWORD", "admin")
             hashed = get_password_hash(password)
             
             new_admin = User(
