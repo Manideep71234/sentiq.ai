@@ -244,7 +244,7 @@ export default function LoginView() {
             </div>
             
             <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Invite Code (Optional for first user)</label>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Invite Code (Optional)</label>
               <input 
                 type="text" 
                 value={inviteCode}

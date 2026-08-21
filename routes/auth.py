@@ -29,13 +29,12 @@ def register(request: Request, register_data: LoginRequest, db: Session = Depend
     user_count = db.exec(select(User)).all()
     is_first_user = len(user_count) == 0
 
-    if not is_first_user:
-        if not register_data.invite_code:
-            raise HTTPException(status_code=400, detail="Invite code required for registration")
-        
+    if not is_first_user and register_data.invite_code:
         invite = db.exec(select(InviteCode).where(InviteCode.code == register_data.invite_code)).first()
         if not invite or invite.is_used:
             raise HTTPException(status_code=400, detail="Invalid or already used invite code")
+    else:
+        invite = None
 
     user = db.exec(select(User).where(User.username == register_data.username)).first()
     if user:
