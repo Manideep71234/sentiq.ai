@@ -300,6 +300,8 @@ export default function AdminPanel({ user }) {
               </div>
             </div>
           </div>
+        )}
+        
         {/* Invites Tab */}
         {activeTab === 'invites' && (
           <div className="bg-[#1f2937] rounded-lg border border-gray-700/50 flex flex-col h-full overflow-hidden p-6">
