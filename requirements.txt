@@ -19,6 +19,5 @@ apscheduler
 webauthn
 authlib
 itsdangerous
-authlib
-httpx
-
+pdfplumber
+edge-tts
