@@ -25,6 +25,7 @@ from routes.tasks import router as tasks_router
 from routes.scheduled_tasks import router as scheduled_tasks_router
 from routes.settings import router as settings_router
 from routes.admin import router as admin_router
+from routes.studio import router as studio_router
 
 from core.scheduler import start_scheduler, sync_db_tasks
 
@@ -113,6 +114,9 @@ if os.path.exists("frontend/dist"):
 else:
     app.mount("/static", StaticFiles(directory="static"), name="static")
 
+os.makedirs("data/uploads", exist_ok=True)
+app.mount("/data/uploads", StaticFiles(directory="data/uploads"), name="uploads")
+
 app.include_router(ui_router)
 app.include_router(auth_router)
 app.include_router(system_router)
@@ -126,3 +130,7 @@ app.include_router(tasks_router)
 app.include_router(scheduled_tasks_router)
 app.include_router(settings_router)
 app.include_router(admin_router)
+app.include_router(studio_router)
+
+from routes.search import router as search_router
+app.include_router(search_router)

@@ -7,16 +7,36 @@ from core.models import User, SessionModel
 from core.security import verify_password, get_password_hash, generate_session_id
 from core.auth import get_current_user
 from core.limiter import limiter
+from itsdangerous import URLSafeTimedSerializer
+from core.config import settings
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+pwd_reset_serializer = URLSafeTimedSerializer(settings.SECRET_KEY)
+
+from typing import Optional
+from core.models import User, SessionModel, InviteCode
 
 class LoginRequest(BaseModel):
     username: str
     password: str
+    invite_code: Optional[str] = None
 
 @router.post("/register")
 @limiter.limit("5/minute")
 def register(request: Request, register_data: LoginRequest, db: Session = Depends(get_session)):
+    # Check if this is the first user
+    user_count = db.exec(select(User)).all()
+    is_first_user = len(user_count) == 0
+
+    if not is_first_user:
+        if not register_data.invite_code:
+            raise HTTPException(status_code=400, detail="Invite code required for registration")
+        
+        invite = db.exec(select(InviteCode).where(InviteCode.code == register_data.invite_code)).first()
+        if not invite or invite.is_used:
+            raise HTTPException(status_code=400, detail="Invalid or already used invite code")
+
     user = db.exec(select(User).where(User.username == register_data.username)).first()
     if user:
         raise HTTPException(
@@ -27,10 +47,17 @@ def register(request: Request, register_data: LoginRequest, db: Session = Depend
     new_user = User(
         username=register_data.username,
         password_hash=get_password_hash(register_data.password),
-        is_admin=False
+        is_admin=is_first_user
     )
     db.add(new_user)
     db.commit()
+    db.refresh(new_user)
+
+    if not is_first_user and register_data.invite_code:
+        invite.is_used = True
+        invite.used_by = new_user.id
+        db.add(invite)
+        db.commit()
     
     return {"message": "User created successfully. You can now log in."}
 
@@ -107,6 +134,65 @@ def change_password(
     
     return {"message": "Password changed successfully. All sessions revoked. Please log in again."}
 
+class ForgotPasswordRequest(BaseModel):
+    identifier: str
+
+@router.post("/forgot-password")
+@limiter.limit("3/minute")
+def forgot_password(request: Request, data: ForgotPasswordRequest, db: Session = Depends(get_session)):
+    import logging
+    logger = logging.getLogger("sentiq.auth")
+    
+    # Check username or email
+    user = db.exec(select(User).where((User.username == data.identifier) | (User.email == data.identifier))).first()
+    if not user:
+        # Prevent user enumeration by returning success anyway
+        return {"message": "If that account exists, a reset link has been sent."}
+    
+    token = pwd_reset_serializer.dumps({"user_id": user.id}, salt="password-reset-salt")
+    
+    # Terminal-logging fallback (since SMTP is disabled)
+    logger.warning("="*50)
+    logger.warning(f"PASSWORD RESET REQUESTED FOR {user.username}")
+    logger.warning(f"RESET LINK: {settings.FRONTEND_URL.rstrip('/')}/reset-password?token={token}")
+    logger.warning("="*50)
+    
+    return {"message": "If that account exists, a reset link has been sent."}
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+@router.post("/reset-password")
+@limiter.limit("3/minute")
+def reset_password(request: Request, data: ResetPasswordRequest, db: Session = Depends(get_session)):
+    from itsdangerous import BadSignature, SignatureExpired
+    try:
+        payload = pwd_reset_serializer.loads(data.token, salt="password-reset-salt", max_age=3600)
+    except SignatureExpired:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Reset token expired")
+    except BadSignature:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid reset token")
+        
+    user_id = payload.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid token payload")
+        
+    user = db.exec(select(User).where(User.id == user_id)).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        
+    user.password_hash = get_password_hash(data.new_password)
+    db.add(user)
+    
+    # Revoke all sessions for this user
+    sessions = db.exec(select(SessionModel).where(SessionModel.user_id == user.id)).all()
+    for s in sessions:
+        db.delete(s)
+        
+    db.commit()
+    return {"message": "Password has been reset successfully. You can now log in."}
+
 class ProfileUpdateRequest(BaseModel):
     full_name: str | None = None
     profile_pic: str | None = None
@@ -124,6 +210,22 @@ def update_profile(
     db.add(user)
     db.commit()
     return {"message": "Profile updated successfully"}
+
+@router.get("/usage")
+def get_usage(user: User = Depends(get_current_user), db: Session = Depends(get_session)):
+    from core.models import UsageLog
+    logs = db.exec(select(UsageLog).where(UsageLog.user_id == user.id)).all()
+    
+    total_cost = sum(log.cost for log in logs)
+    total_prompt = sum(log.prompt_tokens for log in logs)
+    total_completion = sum(log.completion_tokens for log in logs)
+    
+    return {
+        "total_cost": total_cost,
+        "total_prompt_tokens": total_prompt,
+        "total_completion_tokens": total_completion,
+        "total_tokens": total_prompt + total_completion
+    }
 
 @router.get("/me")
 def get_me(request: Request, user: User = Depends(get_current_user)):

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MessageSquare, Globe, FileText, Mail, FileEdit, Calendar, GitCompare, Settings, LogOut, Key, Plus, Edit2, Trash2, Check, X, PanelLeftClose, PanelLeftOpen, Shield } from 'lucide-react';
+import { MessageSquare, Globe, FileText, Mail, FileEdit, Calendar, GitCompare, Settings, LogOut, Key, Plus, Edit2, Trash2, Check, X, PanelLeftClose, PanelLeftOpen, Shield, Wand2 } from 'lucide-react';
 
 export default function Sidebar({ activeView, setActiveView, user, toggleTheme, theme, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) {
   const navItems = [
@@ -10,6 +10,7 @@ export default function Sidebar({ activeView, setActiveView, user, toggleTheme, 
     { id: 'notes', icon: FileEdit, label: 'Notes' },
     { id: 'calendar', icon: Calendar, label: 'Calendar' },
     { id: 'compare', icon: GitCompare, label: 'Compare' },
+    { id: 'studio', icon: Wand2, label: 'Studio' },
     { id: 'api-keys', icon: Key, label: 'API Keys' },
     { id: 'settings', icon: Settings, label: 'Settings' },
   ];

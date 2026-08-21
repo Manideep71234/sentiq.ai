@@ -81,3 +81,17 @@ def sync_db_tasks():
                 )
             except Exception as e:
                 print(f"Failed to schedule task {task.id}: {e}")
+                
+        # Register system jobs
+        try:
+            from core.backup import perform_db_backup
+            scheduler.add_job(
+                perform_db_backup,
+                'cron',
+                hour=0,
+                minute=0,
+                id='system_db_backup',
+                replace_existing=True
+            )
+        except Exception as e:
+            print(f"Failed to schedule system backup job: {e}")

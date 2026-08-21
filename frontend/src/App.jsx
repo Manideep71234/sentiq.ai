@@ -14,6 +14,9 @@ import SettingsAPIKeys from './components/SettingsAPIKeys';
 import CompareView from './components/CompareView';
 import ProfileView from './components/ProfileView';
 import LoginView from './components/LoginView';
+import ResetPasswordView from './components/ResetPasswordView';
+import StudioView from './components/StudioView';
+import CommandPalette from './components/CommandPalette';
 
 function LogoutView() {
   return (
@@ -91,7 +94,7 @@ function App() {
   }, [activeView]);
 
   useEffect(() => {
-    if (window.location.pathname === '/login' || window.location.pathname === '/logout-success') {
+    if (window.location.pathname === '/login' || window.location.pathname === '/logout-success' || window.location.pathname === '/reset-password') {
       return;
     }
 
@@ -112,6 +115,10 @@ function App() {
 
   if (window.location.pathname === '/login') {
     return <LoginView />;
+  }
+
+  if (window.location.pathname === '/reset-password') {
+    return <ResetPasswordView />;
   }
 
   if (window.location.pathname === '/logout-success') {
@@ -198,9 +205,13 @@ function App() {
             <div style={{ display: activeView === 'admin' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
               <AdminPanel user={user} />
             </div>
+            <div style={{ display: activeView === 'studio' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
+              <StudioView />
+            </div>
           </div>
         </main>
       </div>
+      <CommandPalette activeView={activeView} setActiveView={setActiveView} />
     </div>
   );
 }

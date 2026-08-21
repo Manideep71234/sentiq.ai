@@ -1,3 +1,9 @@
+"""
+DISCLAIMER: 
+Any shell execution tools or system-level command tools added to this file MUST BE strictly isolated and sandboxed. 
+Sentiq.AI is deployed in a live environment, and exposing unrestricted shell access to the LLM agent introduces severe security risks.
+If shell tools are ever implemented, they must run inside a secure, ephemeral container or restricted sandbox, and NEVER directly on the host system.
+"""
 import os
 import json
 import httpx

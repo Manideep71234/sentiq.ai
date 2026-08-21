@@ -38,21 +38,7 @@ async def run_agent_loop(
 
     provider = get_provider(provider_name, user_settings)
     
-    # 1. Inject memories and skills into system prompt
-    
-    system_prompt = "You are Sentiq.AI, an advanced intelligent agent.\n"
-    system_prompt += "CRITICAL INSTRUCTIONS:\n"
-    system_prompt += "1. For casual greetings (e.g., 'hi', 'hello'), conversational chatter, or simple questions, respond directly WITHOUT calling any tools. You do not need a tool to say hello.\n"
-    system_prompt += "2. You have tools available (e.g., web_search, read_file). Use them ONLY when a question requires specific, external, or current information. DO NOT GUESS.\n"
-    system_prompt += "3. DO NOT call any tool unless it is strictly necessary to answer the user's prompt. Do not hallucinate tools or files.\n\n"
-    if memories_content:
-        system_prompt += "User's Long-term Memory:\n" + "\n".join([f"- {m}" for m in memories_content]) + "\n\n"
-    if skills_info:
-        system_prompt += "Available Skills:\n" + "\n".join([f"- {s['name']}: {s['prompt']}" for s in skills_info]) + "\n\n"
-        
-    full_messages = [{"role": "system", "content": system_prompt}] + messages
-    
-    # 2. Get tools (builtin + MCP)
+    # 1. Get tools (builtin + MCP)
     mcp_tools = await mcp_manager.get_tools()
     
     # Filter tools for smaller models that struggle with complex JSON tool schemas
@@ -62,6 +48,26 @@ async def run_agent_loop(
         all_tools = []  # Small models hallucinate tools, restrict them entirely for now or keep minimal
     else:
         all_tools = BUILTIN_TOOLS + mcp_tools
+
+    # 2. Build system prompt
+    
+    system_prompt = "You are Sentiq.AI, an advanced intelligent agent.\n"
+    system_prompt += "CRITICAL INSTRUCTIONS:\n"
+    
+    if all_tools:
+        system_prompt += "1. For casual greetings (e.g., 'hi', 'hello'), conversational chatter, or simple questions, respond directly WITHOUT calling any tools. You do not need a tool to say hello.\n"
+        system_prompt += "2. You have tools available (e.g., web_search, read_file). Use them ONLY when a question requires specific, external, or current information. DO NOT GUESS.\n"
+        system_prompt += "3. DO NOT call any tool unless it is strictly necessary to answer the user's prompt. Do not hallucinate tools or files.\n\n"
+    else:
+        system_prompt += "1. Respond directly to the user in a helpful, friendly, and conversational manner.\n"
+        system_prompt += "2. Do NOT output any JSON, XML, or structured tool calling formats. Just provide plain text responses.\n\n"
+        
+    if memories_content:
+        system_prompt += "User's Long-term Memory:\n" + "\n".join([f"- {m}" for m in memories_content]) + "\n\n"
+    if skills_info:
+        system_prompt += "Available Skills:\n" + "\n".join([f"- {s['name']}: {s['prompt']}" for s in skills_info]) + "\n\n"
+        
+    full_messages = [{"role": "system", "content": system_prompt}] + messages
     
     MAX_ITERATIONS = 5
     for _ in range(MAX_ITERATIONS):

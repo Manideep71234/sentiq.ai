@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { User, LogOut, Camera, Save, CheckCircle2, AlertCircle, Trash2, Key } from 'lucide-react';
+import { User, LogOut, Camera, Save, CheckCircle2, AlertCircle, Trash2, Key, TrendingUp } from 'lucide-react';
 
 export default function ProfileView({ user, setUser }) {
   const [fullName, setFullName] = useState(user?.full_name || '');
@@ -17,8 +17,13 @@ export default function ProfileView({ user, setUser }) {
   
   const [status, setStatus] = useState({ type: '', message: '' });
   const [passwordStatus, setPasswordStatus] = useState({ type: '', message: '' });
+  const [usage, setUsage] = useState(null);
   
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    fetch('/auth/usage').then(res => res.json()).then(data => setUsage(data)).catch(console.error);
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -195,6 +200,24 @@ export default function ProfileView({ user, setUser }) {
       <div className="settings-content" style={{ maxWidth: '600px', margin: '0 auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
         
         {/* Profile Info Section */}
+        {usage && (
+          <div style={{ background: 'var(--panel-bg)', border: '1px solid var(--panel-border)', borderRadius: '12px', padding: '24px' }}>
+            <h3 style={{ fontSize: '1.2rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <TrendingUp size={20} className="text-indigo-400" /> Usage & Cost Estimate
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+              <div style={{ background: 'var(--system-msg-bg)', padding: '16px', borderRadius: '8px' }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Total Tokens</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{usage.total_tokens.toLocaleString()}</div>
+              </div>
+              <div style={{ background: 'var(--system-msg-bg)', padding: '16px', borderRadius: '8px' }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Estimated Cost</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent-color)' }}>${usage.total_cost.toFixed(4)}</div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div style={{ 
           background: 'var(--panel-bg)', 
           border: '1px solid var(--panel-border)', 
@@ -301,6 +324,21 @@ export default function ProfileView({ user, setUser }) {
               {isSavingPassword ? 'Updating...' : 'Update Password'}
             </button>
           </form>
+        </div>
+
+        {/* Data Management Section */}
+        <div style={{ background: 'var(--panel-bg)', border: '1px solid var(--panel-border)', borderRadius: '16px', padding: '32px', boxShadow: 'var(--shadow-subtle)' }}>
+          <h3 style={{ marginBottom: '8px', fontSize: '18px', fontWeight: '600', color: 'var(--text-primary)' }}>Data Management</h3>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '14px' }}>Download a complete copy of your data including chats, documents, and notes.</p>
+          
+          <button 
+            onClick={() => window.location.href='/settings/export-data'}
+            style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', background: 'var(--system-msg-bg)', color: 'var(--text-primary)', border: '1px solid var(--panel-border)', borderRadius: '8px', padding: '12px', cursor: 'pointer', fontWeight: '600', transition: 'all 0.2s' }}
+            onMouseOver={(e) => { e.currentTarget.style.background = 'var(--panel-border)' }}
+            onMouseOut={(e) => { e.currentTarget.style.background = 'var(--system-msg-bg)' }}
+          >
+            <Save size={18} /> Export My Data
+          </button>
         </div>
 
         {/* Danger Zone */}

@@ -10,7 +10,8 @@ from core.database import get_session
 from core.models import (
     User, AuditLog, SessionModel, PasskeyCredential, ChatSession, ChatMessage,
     Skill, MemoryEntry, ResearchReport, UserSettings, Document, DocumentVersion,
-    EmailAccount, EmailThreadCache, CalendarAccount, Note, Task, ScheduledTask, TaskResult
+    EmailAccount, EmailThreadCache, CalendarAccount, Note, Task, ScheduledTask, TaskResult,
+    InviteCode
 )
 from core.auth import get_admin_user
 from core.audit import log_event
@@ -156,3 +157,29 @@ def delete_user(
     log_event(db, admin.id, "account_deleted", {"target_username": user.username})
     
     return {"message": "User and all associated data permanently deleted"}
+
+import uuid
+
+@router.get("/invites")
+def get_invites(admin: User = Depends(get_admin_user), db: Session = Depends(get_session)):
+    invites = db.exec(select(InviteCode).order_by(desc(InviteCode.created_at))).all()
+    results = []
+    for inv in invites:
+        results.append({
+            "id": inv.id,
+            "code": inv.code,
+            "is_used": inv.is_used,
+            "created_at": inv.created_at,
+            "used_by": inv.used_by
+        })
+    return results
+
+@router.post("/invites")
+def create_invite(admin: User = Depends(get_admin_user), db: Session = Depends(get_session)):
+    code_str = str(uuid.uuid4())[:8].upper()
+    invite = InviteCode(code=code_str, created_by=admin.id)
+    db.add(invite)
+    db.commit()
+    db.refresh(invite)
+    log_event(db, admin.id, "invite_created", {"code": code_str})
+    return {"id": invite.id, "code": invite.code}

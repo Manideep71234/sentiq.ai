@@ -47,6 +47,12 @@ async def websocket_research(websocket: WebSocket):
             if not query:
                 continue
 
+            if provider_name == "gemini":
+                from core.limiter import gemini_limiter
+                if not gemini_limiter.check_limit(str(user.id)):
+                    await websocket.send_json({"error": "Free tier Gemini rate limit exceeded (15 RPM). Please wait a minute or use another provider."})
+                    continue
+
             from core.limiter import search_limiter
             if not search_limiter.check_limit(str(user.id)):
                 await websocket.send_json({"error": "Search rate limit exceeded. Please try again later."})

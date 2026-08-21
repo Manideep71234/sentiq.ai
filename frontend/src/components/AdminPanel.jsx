@@ -5,6 +5,7 @@ export default function AdminPanel({ user }) {
   const [activeTab, setActiveTab] = useState('status');
   const [status, setStatus] = useState(null);
   const [usersList, setUsersList] = useState([]);
+  const [invites, setInvites] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
   const [auditTotal, setAuditTotal] = useState(0);
   const [logPage, setLogPage] = useState(0);
@@ -33,6 +34,10 @@ export default function AdminPanel({ user }) {
         const data = await res.json();
         setAuditLogs(data.logs);
         setAuditTotal(data.total);
+      } else if (activeTab === 'invites') {
+        const res = await fetch('/admin/invites');
+        if (!res.ok) throw new Error('Failed to fetch invites');
+        setInvites(await res.json());
       }
     } catch (err) {
       setError(err.message);
@@ -75,6 +80,19 @@ export default function AdminPanel({ user }) {
     }
   };
 
+  const handleGenerateInvite = async () => {
+    try {
+      const res = await fetch('/admin/invites', { method: 'POST' });
+      if (res.ok) {
+        fetchData();
+      } else {
+        alert('Failed to generate invite');
+      }
+    } catch (e) {
+      alert('Error generating invite');
+    }
+  };
+
   if (!user?.is_admin) {
     return (
       <div className="view-container flex items-center justify-center h-full text-red-500">
@@ -110,6 +128,12 @@ export default function AdminPanel({ user }) {
           onClick={() => setActiveTab('logs')}
         >
           <FileClock className="w-4 h-4" /> Audit Logs
+        </button>
+        <button
+          className={`pb-2 px-1 flex items-center gap-2 ${activeTab === 'invites' ? 'border-b-2 border-indigo-500 text-indigo-400' : 'text-gray-400 hover:text-gray-200'}`}
+          onClick={() => setActiveTab('invites')}
+        >
+          <FileClock className="w-4 h-4" /> Invites
         </button>
       </div>
 
@@ -274,6 +298,53 @@ export default function AdminPanel({ user }) {
                   Next
                 </button>
               </div>
+            </div>
+          </div>
+        {/* Invites Tab */}
+        {activeTab === 'invites' && (
+          <div className="bg-[#1f2937] rounded-lg border border-gray-700/50 flex flex-col h-full overflow-hidden p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-gray-200">Registration Invites</h3>
+              <button 
+                onClick={handleGenerateInvite}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition"
+              >
+                + Generate Invite Code
+              </button>
+            </div>
+            
+            <div className="overflow-auto flex-1 border border-gray-700/50 rounded-lg">
+              <table className="w-full text-left text-sm text-gray-300">
+                <thead className="bg-[#111827] text-gray-400 text-xs uppercase sticky top-0 z-10">
+                  <tr>
+                    <th className="px-4 py-3">Code</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3">Created</th>
+                    <th className="px-4 py-3">Used By</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-700/50">
+                  {invites.map(inv => (
+                    <tr key={inv.id} className="hover:bg-gray-750/30">
+                      <td className="px-4 py-3 font-mono text-indigo-400 font-bold">{inv.code}</td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${inv.is_used ? 'bg-gray-700 text-gray-400' : 'bg-green-500/10 text-green-400'}`}>
+                          {inv.is_used ? 'Used' : 'Active'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-gray-400">
+                        {new Date(inv.created_at).toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-gray-400">
+                        {inv.used_by ? `User ID: ${inv.used_by}` : '-'}
+                      </td>
+                    </tr>
+                  ))}
+                  {invites.length === 0 && !loading && (
+                    <tr><td colSpan="4" className="text-center py-6 text-gray-500">No invite codes generated.</td></tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         )}

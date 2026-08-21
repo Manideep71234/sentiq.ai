@@ -102,3 +102,72 @@ async def update_api_keys(keys: APIKeysUpdate, user: User = Depends(get_current_
             log_event(db, user.id, "api_key_added", {"provider": "openrouter"})
     
     return {"message": "API keys saved and validated successfully."}
+
+@router.get("/export-data")
+def export_user_data(user: User = Depends(get_current_user), db: Session = Depends(get_session)):
+    import json
+    import io
+    import zipfile
+    from fastapi.responses import StreamingResponse
+    from core.models import ChatSession, ChatMessage, Document, MemoryEntry, ScheduledTask
+    
+    data = {}
+    data["profile"] = {"username": user.username, "email": user.email, "full_name": user.full_name}
+    
+    sessions = db.exec(select(ChatSession).where(ChatSession.user_id == user.id)).all()
+    chats = []
+    for s in sessions:
+        messages = db.exec(select(ChatMessage).where(ChatMessage.session_id == s.id)).all()
+        chats.append({
+            "id": s.id, "title": s.title, "created_at": s.created_at.isoformat(),
+            "messages": [{"role": m.role, "content": m.content, "created_at": m.created_at.isoformat()} for m in messages]
+        })
+    data["chats"] = chats
+    
+    docs = db.exec(select(Document).where(Document.user_id == user.id)).all()
+    data["documents"] = [{"id": d.id, "title": d.title, "content": d.content, "type": d.doc_type} for d in docs]
+    
+    notes = db.exec(select(MemoryEntry).where(MemoryEntry.user_id == user.id)).all()
+    data["notes"] = [{"id": n.id, "content": n.content, "created_at": n.created_at.isoformat()} for n in notes]
+    
+    json_str = json.dumps(data, indent=2)
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
+        zip_file.writestr("sentiq_export.json", json_str)
+        
+    zip_buffer.seek(0)
+    return StreamingResponse(
+        zip_buffer,
+        media_type="application/zip",
+        headers={"Content-Disposition": f"attachment; filename=sentiq_export_{user.username}.zip"}
+    )
+
+@router.delete("/account")
+def delete_account(user: User = Depends(get_current_user), db: Session = Depends(get_session)):
+    from sqlalchemy import text
+    from fastapi.responses import JSONResponse
+    from core.models import ChatSession
+
+    uid = {"uid": user.id}
+    db.exec(text("DELETE FROM sessionmodel WHERE user_id = :uid"), uid)
+    db.exec(text("DELETE FROM usersettings WHERE user_id = :uid"), uid)
+    
+    sessions = db.exec(select(ChatSession).where(ChatSession.user_id == user.id)).all()
+    for s in sessions:
+        db.exec(text("DELETE FROM chatmessage WHERE session_id = :sid"), {"sid": s.id})
+        
+    db.exec(text("DELETE FROM chatsession WHERE user_id = :uid"), uid)
+    db.exec(text("DELETE FROM document WHERE user_id = :uid"), uid)
+    db.exec(text("DELETE FROM documentversion WHERE document_id IN (SELECT id FROM document WHERE user_id = :uid)"), uid)
+    db.exec(text("DELETE FROM memoryentry WHERE user_id = :uid"), uid)
+    db.exec(text("DELETE FROM scheduledtask WHERE user_id = :uid"), uid)
+    db.exec(text("DELETE FROM taskresult WHERE scheduled_task_id IN (SELECT id FROM scheduledtask WHERE user_id = :uid)"), uid)
+    db.exec(text("DELETE FROM skill WHERE user_id = :uid"), uid)
+    db.exec(text("DELETE FROM emailaccount WHERE user_id = :uid"), uid)
+    
+    db.exec(text("DELETE FROM user WHERE id = :uid"), uid)
+    db.commit()
+    
+    response = JSONResponse(content={"message": "Account deleted successfully"})
+    response.delete_cookie("session_id")
+    return response

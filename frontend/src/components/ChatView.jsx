@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Send, Square } from 'lucide-react';
+import { Send, Square, Paperclip, X, Loader2, Mic, MicOff } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 import ToolLog from './ToolLog';
@@ -13,7 +13,11 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
   const [sessionId, setSessionId] = useState(null);
   const [ws, setWs] = useState(null);
   const [provider, setProvider] = useState('openrouter');
+  const [attachments, setAttachments] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const [model, setModel] = useState('openrouter/auto');
+  const recognitionRef = useRef(null);
 
   // Realtime streaming state
   const [streamingContent, setStreamingContent] = useState('');
@@ -103,7 +107,8 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
     { value: 'openrouter', label: 'OpenRouter' },
     { value: 'groq', label: 'Groq' },
     { value: 'gemini', label: 'Google Gemini' },
-    { value: 'ollama', label: 'Ollama (Local)' }
+    { value: 'ollama', label: 'Ollama (Local)' },
+    { value: 'lmstudio', label: 'LM Studio (Local)' }
   ];
 
   const [openRouterModels, setOpenRouterModels] = useState([
@@ -163,6 +168,10 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
         { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
         { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' }
       ];
+    } else if (prov === 'lmstudio') {
+      return [
+        { value: 'local-model', label: 'Local Model (LM Studio)' }
+      ];
     } else {
       return openRouterModels;
     }
@@ -196,7 +205,7 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
     setIsProcessing(false);
 
     if (!isResearch) {
-      initChatSession();
+      setSessionId(null);
     }
 
     return () => {
@@ -255,7 +264,11 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
     const handleLoadSession = (e) => {
       if (e.detail.sessionId === null) {
         setMessages([]);
-        initChatSession();
+        setSessionId(null);
+        if (ws) {
+          ws.close();
+          setWs(null);
+        }
       } else {
         loadChatSession(e.detail.sessionId);
         window.dispatchEvent(new CustomEvent('chatTitleUpdated', { detail: { sessionId: e.detail.sessionId, title: e.detail.title } }));
@@ -353,13 +366,101 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
     return newWs;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (hasAnyKey === false) return;
-    if (!input.trim() || isProcessing) return;
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+      const res = await fetch('/chat/upload', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAttachments(prev => [...prev, data]);
+      } else {
+        alert(data.detail || 'Failed to upload attachment');
+      }
+    } catch (err) {
+      alert('Network error during upload');
+    } finally {
+      setIsUploading(false);
+      e.target.value = null; // Reset input
+    }
+  };
 
-    const userMsg = input.trim();
+  const removeAttachment = (index) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const toggleListening = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Your browser does not support Speech Recognition.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (event) => {
+      let finalTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        }
+      }
+      if (finalTranscript) {
+        setInput(prev => prev + (prev ? ' ' : '') + finalTranscript);
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error", event.error);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.start();
+    recognitionRef.current = recognition;
+    setIsListening(true);
+  };
+
+  const handleSubmit = async (e) => {
+    e?.preventDefault();
+    if (!input.trim() && attachments.length === 0) return;
+    if (isProcessing) return;
+
+    let userMsg = input.trim();
+    
+    if (attachments.length > 0) {
+      attachments.forEach(att => {
+        if (att.type === 'pdf') {
+          userMsg += `\n\n[Attached File: ${att.filename}]\n${att.content}`;
+        } else if (att.type === 'image') {
+          userMsg += `\n\n[Image: ${att.url}]`;
+        }
+      });
+      setAttachments([]);
+    }
+
     lastUserMessageRef.current = userMsg;
+    // Scroll down eagerly
     setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
     setInput('');
     setIsProcessing(true);
@@ -397,7 +498,7 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && (!e.shiftKey || e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       handleSubmit(e);
     }
@@ -416,7 +517,12 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
   };
 
   const renderContent = (content) => {
-    return { __html: DOMPurify.sanitize(marked.parse(content || '')) };
+    if (!content) return { __html: '' };
+    // Replace [Image: /data/uploads/xyz.jpg] with markdown image syntax
+    const withImages = content.replace(/\[Image:\s*(\/data\/uploads\/[^\]]+)\]/g, '![Attachment]($1)');
+    // Strip [Attached File: filename] blocks for display or format them nicely
+    const withFiles = withImages.replace(/\[Attached File:\s*([^\]]+)\]/g, '> 📎 **Attached Document:** $1\n');
+    return { __html: DOMPurify.sanitize(marked.parse(withFiles)) };
   };
 
   return (
@@ -444,7 +550,7 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
       )}
 
       {/* Model Selector Bar */}
-      <div style={{ padding: '0.5rem 2rem', borderBottom: '1px solid var(--panel-border)', display: 'flex', gap: '1rem', background: 'transparent', alignItems: 'center' }}>
+      <div className="model-selector-bar" style={{ padding: '0.5rem 2rem', borderBottom: '1px solid var(--panel-border)', display: 'flex', gap: '1rem', background: 'transparent', alignItems: 'center' }}>
         <Dropdown
           value={provider}
           onChange={setProvider}
@@ -517,6 +623,17 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
       </div>
 
       <div className="chat-input-container">
+        {attachments.length > 0 && (
+          <div style={{ display: 'flex', gap: '8px', padding: '8px', flexWrap: 'wrap', borderBottom: '1px solid var(--panel-border)' }}>
+            {attachments.map((att, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--panel-bg)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', border: '1px solid var(--panel-border)' }}>
+                {att.type === 'image' ? <img src={att.url} alt="attachment" style={{ height: '24px', width: '24px', objectFit: 'cover', borderRadius: '2px' }} /> : <Paperclip size={12} />}
+                <span style={{ maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{att.filename}</span>
+                <button onClick={() => removeAttachment(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', display: 'flex' }}><X size={12} /></button>
+              </div>
+            ))}
+          </div>
+        )}
         <form className="chat-form" onSubmit={handleSubmit}>
           <textarea
             ref={inputRef}
@@ -536,15 +653,33 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
             style={{ overflowY: 'hidden', minHeight: '56px', maxHeight: '40vh' }}
           />
           <div className="chat-form-footer">
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-              Use Shift + Enter for new line
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input type="file" id="chat-attachment" style={{ display: 'none' }} onChange={handleFileUpload} accept=".pdf,.jpg,.jpeg,.png,.webp" />
+              <label htmlFor="chat-attachment" style={{ cursor: 'pointer', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', color: 'var(--text-secondary)', border: 'none', borderRadius: '4px', transition: 'background 0.2s' }} onMouseOver={e => e.currentTarget.style.background = 'var(--hover-bg)'} onMouseOut={e => e.currentTarget.style.background = 'transparent'} title="Attach file (PDF, Image)">
+                {isUploading ? <Loader2 size={18} className="spin" /> : <Paperclip size={18} />}
+              </label>
+              
+              <button 
+                type="button" 
+                onClick={toggleListening}
+                style={{ cursor: 'pointer', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: isListening ? 'rgba(239, 68, 68, 0.1)' : 'transparent', color: isListening ? '#ef4444' : 'var(--text-secondary)', border: 'none', borderRadius: '4px', transition: 'background 0.2s' }} 
+                onMouseOver={e => e.currentTarget.style.background = isListening ? 'rgba(239, 68, 68, 0.2)' : 'var(--hover-bg)'} 
+                onMouseOut={e => e.currentTarget.style.background = isListening ? 'rgba(239, 68, 68, 0.1)' : 'transparent'}
+                title={isListening ? "Stop listening" : "Start voice dictation"}
+              >
+                {isListening ? <Mic size={18} className="pulse-animation" /> : <MicOff size={18} />}
+              </button>
+
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginLeft: '8px' }}>
+                Use Shift + Enter for new line
+              </span>
+            </div>
             {isProcessing ? (
               <button type="button" className="send-btn stop-btn" onClick={handleStop} title="Stop Generation" style={{ backgroundColor: 'var(--error-color)' }}>
                 <Square size={16} fill="currentColor" />
               </button>
             ) : (
-              <button type="submit" className="send-btn" disabled={!input.trim()}>
+              <button type="submit" className="send-btn" disabled={(!input.trim() && attachments.length === 0) || isUploading}>
                 <Send size={16} />
               </button>
             )}

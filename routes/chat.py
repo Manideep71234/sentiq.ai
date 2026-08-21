@@ -47,8 +47,11 @@ def delete_session(session_id: int, user: User = Depends(get_current_user), db: 
     if not session_obj:
         raise HTTPException(status_code=404, detail="Session not found")
     
-    # Cascade delete is usually handled by the DB relationship, but we can explicitly delete messages too if needed.
-    # We will let SQLModel/SQLAlchemy handle it or just delete the session.
+    # Explicitly delete all associated messages first to prevent orphaned records
+    messages = db.exec(select(ChatMessage).where(ChatMessage.session_id == session_id)).all()
+    for msg in messages:
+        db.delete(msg)
+        
     db.delete(session_obj)
     db.commit()
     return {"message": "Session deleted successfully"}
@@ -61,6 +64,48 @@ def get_messages(session_id: int, user: User = Depends(get_current_user), db: Se
     messages = db.exec(select(ChatMessage).where(ChatMessage.session_id == session_id).order_by(ChatMessage.created_at.asc())).all()
     return messages
 
+from fastapi import UploadFile, File
+import os
+import uuid
+import pdfplumber
+
+@router.post("/upload")
+async def upload_attachment(file: UploadFile = File(...), user: User = Depends(get_current_user)):
+    os.makedirs("data/uploads", exist_ok=True)
+    filename = file.filename
+    ext = os.path.splitext(filename)[1].lower()
+    
+    if ext == ".pdf":
+        temp_path = f"data/uploads/temp_{uuid.uuid4()}.pdf"
+        with open(temp_path, "wb") as f:
+            f.write(await file.read())
+        
+        text_content = ""
+        try:
+            with pdfplumber.open(temp_path) as pdf:
+                for page in pdf.pages:
+                    text_content += page.extract_text() + "\n"
+        except Exception as e:
+            text_content = f"Failed to extract PDF: {str(e)}"
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+                
+        return {"type": "pdf", "filename": filename, "content": text_content.strip()}
+        
+    elif ext in [".jpg", ".jpeg", ".png", ".webp"]:
+        save_name = f"{uuid.uuid4()}{ext}"
+        save_path = f"data/uploads/{save_name}"
+        with open(save_path, "wb") as f:
+            f.write(await file.read())
+        return {"type": "image", "filename": filename, "url": f"/data/uploads/{save_name}"}
+        
+    else:
+        raise HTTPException(status_code=400, detail="Unsupported file type")
+
+import re
+import base64
+
 def sync_save_user_msg_and_load_history(session_id: int, user_message: str):
     with Session(engine) as db:
         msg = ChatMessage(session_id=session_id, role="user", content=user_message)
@@ -70,7 +115,31 @@ def sync_save_user_msg_and_load_history(session_id: int, user_message: str):
         history = db.exec(select(ChatMessage).where(ChatMessage.session_id == session_id).order_by(ChatMessage.created_at.asc())).all()
         messages = []
         for h in history:
-            m = {"role": h.role, "content": h.content}
+            content = h.content
+            # Check for image attachments
+            image_pattern = r'\[Image:\s*(/data/uploads/[^\]]+)\]'
+            images = re.findall(image_pattern, content)
+            
+            if images and h.role == "user":
+                content_list = []
+                clean_text = re.sub(image_pattern, '', content).strip()
+                if clean_text:
+                    content_list.append({"type": "text", "text": clean_text})
+                
+                for img_path in images:
+                    local_path = img_path.lstrip("/")
+                    if os.path.exists(local_path):
+                        with open(local_path, "rb") as f:
+                            b64 = base64.b64encode(f.read()).decode('utf-8')
+                        mime = "image/jpeg"
+                        if local_path.lower().endswith(".png"): mime = "image/png"
+                        elif local_path.lower().endswith(".webp"): mime = "image/webp"
+                        content_list.append({"type": "image_url", "image_url": {"url": f"data:{mime};base64,{b64}"}})
+                
+                m = {"role": h.role, "content": content_list if content_list else content}
+            else:
+                m = {"role": h.role, "content": content}
+                
             if h.tool_calls:
                 m["tool_calls"] = json.loads(h.tool_calls)
             messages.append(m)
@@ -86,6 +155,35 @@ def sync_save_assistant_message(session_id: int, full_assistant_message: str):
         if chat_session:
             chat_session.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
         db.commit()
+
+def log_usage(user_id: int, model_name: str, prompt_text: str, completion_text: str):
+    from core.models import UsageLog
+    with Session(engine) as db:
+        p_tokens = len(prompt_text) // 4
+        c_tokens = len(completion_text) // 4
+        
+        # Hardcoded rates per 1M tokens
+        rates = {
+            "llama-3.1-8b-instant": (0.05, 0.08),
+            "llama-3.1-70b-versatile": (0.59, 0.79),
+            "gpt-4o": (5.0, 15.0),
+            "gpt-4o-mini": (0.15, 0.60),
+            "claude-3-5-sonnet-20240620": (3.0, 15.0)
+        }
+        
+        rate = rates.get(model_name, (0.0, 0.0))
+        cost = (p_tokens / 1_000_000) * rate[0] + (c_tokens / 1_000_000) * rate[1]
+        
+        log = UsageLog(
+            user_id=user_id,
+            model_name=model_name,
+            prompt_tokens=p_tokens,
+            completion_tokens=c_tokens,
+            cost=cost
+        )
+        db.add(log)
+        db.commit()
+
 
 async def auto_generate_title(session_id: int, user_id: int, user_message: str, provider_name: str, model: str, websocket: WebSocket):
     from core.providers import get_provider
@@ -212,6 +310,9 @@ async def websocket_chat(websocket: WebSocket, session_id: int):
 
             # Offload saving to prevent freezing event loop
             await asyncio.to_thread(sync_save_assistant_message, session_id, full_assistant_message)
+            
+            # Log usage
+            await asyncio.to_thread(log_usage, user.id, model, str(messages), full_assistant_message)
             
             await websocket.send_json({"type": "done", "content": full_assistant_message})
 

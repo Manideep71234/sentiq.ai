@@ -4,9 +4,11 @@ export default function LoginView() {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -56,7 +58,7 @@ export default function LoginView() {
       const res = await fetch('/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ username, password, invite_code: inviteCode })
       });
       const data = await res.json();
       if (res.ok) {
@@ -104,6 +106,34 @@ export default function LoginView() {
     }
   };
 
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    if (!username) {
+      setErrorMsg('Please enter your email address/username.');
+      return;
+    }
+    setIsLoading(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+    try {
+      const res = await fetch('/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: username })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSuccessMsg(data.message);
+      } else {
+        setErrorMsg(data.detail || 'Request failed');
+      }
+    } catch (err) {
+      setErrorMsg('Network error. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -124,53 +154,123 @@ export default function LoginView() {
           Sentiq<span style={{ color: 'var(--accent-color)' }}>.AI</span>
         </h1>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '30px' }}>
-          Sign in to your intelligent workspace.
+          {isForgotPassword ? 'Reset your password.' : 'Sign in to your intelligent workspace.'}
         </p>
-        
-        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px', textAlign: 'left' }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Email address</label>
-            <input 
-              type="text" 
-              value={username}
-              onChange={e => setUsername(e.target.value)}
-              placeholder="you@example.com"
-              style={{
-                width: '100%', padding: '12px', borderRadius: 'var(--radius-md)',
-                background: 'var(--system-msg-bg)', border: '1px solid var(--panel-border)',
-                color: 'var(--text-primary)', outline: 'none'
-              }}
-              required 
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Password</label>
-            <input 
-              type="password" 
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="••••••••"
-              style={{
-                width: '100%', padding: '12px', borderRadius: 'var(--radius-md)',
-                background: 'var(--system-msg-bg)', border: '1px solid var(--panel-border)',
-                color: 'var(--text-primary)', outline: 'none'
-              }}
-              required 
-            />
-          </div>
 
-          {errorMsg && <div style={{ color: '#dc2626', background: 'rgba(220,38,38,0.1)', padding: '10px', borderRadius: '8px', fontSize: '13px', textAlign: 'center' }}>{errorMsg}</div>}
-          {successMsg && <div style={{ color: '#059669', background: 'rgba(5,150,105,0.1)', padding: '10px', borderRadius: '8px', fontSize: '13px', textAlign: 'center' }}>{successMsg}</div>}
+        {isForgotPassword ? (
+          <form onSubmit={handleForgotPassword} style={{ display: 'flex', flexDirection: 'column', gap: '15px', textAlign: 'left' }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Email address / Username</label>
+              <input 
+                type="text" 
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                placeholder="you@example.com"
+                style={{
+                  width: '100%', padding: '12px', borderRadius: 'var(--radius-md)',
+                  background: 'var(--system-msg-bg)', border: '1px solid var(--panel-border)',
+                  color: 'var(--text-primary)', outline: 'none'
+                }}
+                required 
+              />
+            </div>
+            
+            {errorMsg && <div style={{ color: '#dc2626', background: 'rgba(220,38,38,0.1)', padding: '10px', borderRadius: '8px', fontSize: '13px', textAlign: 'center' }}>{errorMsg}</div>}
+            {successMsg && <div style={{ color: '#059669', background: 'rgba(5,150,105,0.1)', padding: '10px', borderRadius: '8px', fontSize: '13px', textAlign: 'center' }}>{successMsg}</div>}
 
-          <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
-            <button type="submit" disabled={isLoading} className="glass-btn" style={{ flex: 1, padding: '12px' }}>
-              {isLoading ? 'Signing in...' : 'Sign In'}
+            <button 
+              type="submit" 
+              disabled={isLoading}
+              style={{
+                width: '100%', padding: '14px', background: 'var(--accent-color)', color: 'white',
+                border: 'none', borderRadius: 'var(--radius-md)', cursor: isLoading ? 'not-allowed' : 'pointer',
+                fontWeight: '600', fontSize: '1rem', marginTop: '10px', opacity: isLoading ? 0.7 : 1
+              }}
+            >
+              {isLoading ? 'Sending...' : 'Send Reset Link'}
             </button>
-            <button type="button" disabled={isLoading} onClick={handleRegister} className="glass-btn" style={{ flex: 1, padding: '12px', background: 'var(--sidebar-hover)' }}>
-              Sign Up
+            <button 
+              type="button" 
+              onClick={() => setIsForgotPassword(false)}
+              style={{
+                width: '100%', padding: '14px', background: 'transparent', color: 'var(--text-secondary)',
+                border: '1px solid var(--panel-border)', borderRadius: 'var(--radius-md)', cursor: 'pointer',
+                fontWeight: '600', fontSize: '1rem'
+              }}
+            >
+              Back to Login
             </button>
-          </div>
-        </form>
+          </form>
+        ) : (
+          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px', textAlign: 'left' }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Email address</label>
+              <input 
+                type="text" 
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                placeholder="you@example.com"
+                style={{
+                  width: '100%', padding: '12px', borderRadius: 'var(--radius-md)',
+                  background: 'var(--system-msg-bg)', border: '1px solid var(--panel-border)',
+                  color: 'var(--text-primary)', outline: 'none'
+                }}
+                required 
+              />
+            </div>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Password</label>
+                <button 
+                  type="button" 
+                  onClick={() => setIsForgotPassword(true)}
+                  style={{ background: 'none', border: 'none', color: 'var(--accent-color)', fontSize: '0.85rem', cursor: 'pointer', padding: 0 }}
+                >
+                  Forgot password?
+                </button>
+              </div>
+              <input 
+                type="password" 
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="••••••••"
+                style={{
+                  width: '100%', padding: '12px', borderRadius: 'var(--radius-md)',
+                  background: 'var(--system-msg-bg)', border: '1px solid var(--panel-border)',
+                  color: 'var(--text-primary)', outline: 'none'
+                }}
+                required 
+              />
+            </div>
+            
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Invite Code (Optional for first user)</label>
+              <input 
+                type="text" 
+                value={inviteCode}
+                onChange={e => setInviteCode(e.target.value)}
+                placeholder="XXXX-XXXX"
+                style={{
+                  width: '100%', padding: '12px', borderRadius: 'var(--radius-md)',
+                  background: 'var(--system-msg-bg)', border: '1px solid var(--panel-border)',
+                  color: 'var(--text-primary)', outline: 'none'
+                }}
+              />
+            </div>
+
+            {errorMsg && <div style={{ color: '#dc2626', background: 'rgba(220,38,38,0.1)', padding: '10px', borderRadius: '8px', fontSize: '13px', textAlign: 'center' }}>{errorMsg}</div>}
+            {successMsg && <div style={{ color: '#059669', background: 'rgba(5,150,105,0.1)', padding: '10px', borderRadius: '8px', fontSize: '13px', textAlign: 'center' }}>{successMsg}</div>}
+
+            <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
+              <button type="submit" disabled={isLoading} className="glass-btn" style={{ flex: 1, padding: '12px' }}>
+                {isLoading ? 'Signing in...' : 'Sign In'}
+              </button>
+              <button type="button" disabled={isLoading} onClick={handleRegister} className="glass-btn" style={{ flex: 1, padding: '12px', background: 'var(--sidebar-hover)' }}>
+                Sign Up
+              </button>
+            </div>
+          </form>
+        )}
 
         <div style={{ margin: '25px 0', borderBottom: '1px solid var(--panel-border)', position: 'relative' }}>
           <span style={{ position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)', background: 'var(--panel-bg)', padding: '0 10px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>OR</span>

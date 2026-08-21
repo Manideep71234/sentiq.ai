@@ -26,6 +26,11 @@ def get_provider(provider_name: str, user_settings: Optional[UserSettings] = Non
     elif provider_name.lower() == "ollama":
         return OpenAICompatProvider(f"{settings.OLLAMA_BASE_URL}/v1", "ollama")
         
+    elif provider_name.lower() == "lmstudio":
+        # Using local LM Studio default endpoint if env not set
+        lmstudio_url = getattr(settings, "LMSTUDIO_BASE_URL", "http://localhost:1234/v1")
+        return OpenAICompatProvider(lmstudio_url, "lmstudio")
+        
     elif provider_name.lower() == "openrouter":
         api_key = resolve_key(user_settings.openrouter_api_key if user_settings else None, settings.OPENROUTER_API_KEY)
         if not api_key:
