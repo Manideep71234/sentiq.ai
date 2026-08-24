@@ -165,8 +165,8 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
       ];
     } else if (prov === 'gemini') {
       return [
-        { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
-        { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' }
+        { value: 'gemini-1.5-flash-latest', label: 'Gemini 1.5 Flash' },
+        { value: 'gemini-1.5-pro-latest', label: 'Gemini 1.5 Pro' }
       ];
     } else if (prov === 'lmstudio') {
       return [
