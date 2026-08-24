@@ -122,7 +122,7 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
       if (settingsRes.ok) {
         const settings = await settingsRes.json();
         hasCustomKey = settings.has_openrouter;
-        setHasAnyKey(settings.has_groq || settings.has_openrouter);
+        setHasAnyKey(settings.has_groq || settings.has_openrouter || settings.has_gemini);
       } else {
         setHasAnyKey(false);
       }
@@ -710,6 +710,9 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
               </a>
               <a href="https://openrouter.ai/keys" target="_blank" rel="noreferrer" style={{ color: 'var(--accent-color)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '1.2rem' }}>🧠</span> Get an OpenRouter Key (Free/Premium Models)
+              </a>
+              <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ color: 'var(--accent-color)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '1.2rem' }}>✨</span> Get a Google Gemini Key (Free Tier Available)
               </a>
             </div>
 
