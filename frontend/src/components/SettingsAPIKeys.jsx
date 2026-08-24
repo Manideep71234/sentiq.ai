@@ -4,16 +4,21 @@ import { Key, Save, CheckCircle2, AlertCircle, Eye, EyeOff, Trash2, Edit2 } from
 export default function SettingsAPIKeys() {
   const [groqKey, setGroqKey] = useState('');
   const [openRouterKey, setOpenRouterKey] = useState('');
+  const [geminiKey, setGeminiKey] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [status, setStatus] = useState({ type: '', message: '' });
   const [hasGroq, setHasGroq] = useState(false);
   const [hasOpenRouter, setHasOpenRouter] = useState(false);
+  const [hasGemini, setHasGemini] = useState(false);
   const [groqMasked, setGroqMasked] = useState('');
   const [openRouterMasked, setOpenRouterMasked] = useState('');
+  const [geminiMasked, setGeminiMasked] = useState('');
   const [isEditingGroq, setIsEditingGroq] = useState(false);
   const [isEditingOpenRouter, setIsEditingOpenRouter] = useState(false);
+  const [isEditingGemini, setIsEditingGemini] = useState(false);
   const [showGroqKey, setShowGroqKey] = useState(false);
   const [showOpenRouterKey, setShowOpenRouterKey] = useState(false);
+  const [showGeminiKey, setShowGeminiKey] = useState(false);
 
   useEffect(() => {
     fetch('/settings/api-keys')
@@ -21,10 +26,13 @@ export default function SettingsAPIKeys() {
       .then(data => {
         setHasGroq(data.has_groq);
         setHasOpenRouter(data.has_openrouter);
+        setHasGemini(data.has_gemini);
         setGroqMasked(data.groq_masked || '');
         setOpenRouterMasked(data.openrouter_masked || '');
+        setGeminiMasked(data.gemini_masked || '');
         setIsEditingGroq(!data.has_groq);
         setIsEditingOpenRouter(!data.has_openrouter);
+        setIsEditingGemini(!data.has_gemini);
       })
       .catch(err => console.error(err));
   }, []);
@@ -40,7 +48,8 @@ export default function SettingsAPIKeys() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           groq_api_key: groqKey || undefined,
-          openrouter_api_key: openRouterKey || undefined
+          openrouter_api_key: openRouterKey || undefined,
+          gemini_api_key: geminiKey || undefined
         })
       });
 
@@ -57,8 +66,14 @@ export default function SettingsAPIKeys() {
           setIsEditingOpenRouter(false);
           setOpenRouterMasked('sk-or-••••••••••••');
         }
+        if (geminiKey !== '') {
+          setHasGemini(true);
+          setIsEditingGemini(false);
+          setGeminiMasked('AIza••••••••••••');
+        }
         setGroqKey('');
         setOpenRouterKey('');
+        setGeminiKey('');
       } else {
         setStatus({ type: 'error', message: data.detail || 'Validation failed. Please check your keys.' });
       }
@@ -74,24 +89,29 @@ export default function SettingsAPIKeys() {
     setStatus({ type: '', message: '' });
     
     try {
-      const payload = provider === 'groq' ? { groq_api_key: "" } : { openrouter_api_key: "" };
+      const payload = provider === 'groq' ? { groq_api_key: "" } : provider === 'openrouter' ? { openrouter_api_key: "" } : { gemini_api_key: "" };
       const res = await fetch('/settings/api-keys', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
       if (res.ok) {
-        setStatus({ type: 'success', message: `${provider === 'groq' ? 'Groq' : 'OpenRouter'} key removed successfully.` });
+        setStatus({ type: 'success', message: `${provider === 'groq' ? 'Groq' : provider === 'openrouter' ? 'OpenRouter' : 'Gemini'} key removed successfully.` });
         if (provider === 'groq') {
           setHasGroq(false);
           setIsEditingGroq(true);
           setGroqMasked('');
           setGroqKey('');
-        } else {
+        } else if (provider === 'openrouter') {
           setHasOpenRouter(false);
           setIsEditingOpenRouter(true);
           setOpenRouterMasked('');
           setOpenRouterKey('');
+        } else if (provider === 'gemini') {
+          setHasGemini(false);
+          setIsEditingGemini(true);
+          setGeminiMasked('');
+          setGeminiKey('');
         }
       }
     } catch (err) {
@@ -196,14 +216,47 @@ export default function SettingsAPIKeys() {
             <small style={{ color: 'var(--text-secondary)' }}>Get your key from openrouter.ai/keys</small>
           </div>
 
+          <div className="input-group">
+            <label style={{ display: 'flex', justifyContent: 'space-between' }}>
+              Gemini API Key
+              {hasGemini && <span style={{ color: '#22c55e', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}><CheckCircle2 size={12} /> Configured</span>}
+            </label>
+            {!isEditingGemini ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--system-msg-bg)', padding: '12px', borderRadius: '8px', border: '1px solid var(--panel-border)' }}>
+                <Key size={18} style={{ color: 'var(--text-secondary)' }} />
+                <span style={{ flex: 1, fontFamily: 'monospace', color: 'var(--text-primary)' }}>{geminiMasked}</span>
+                <button type="button" onClick={() => setIsEditingGemini(true)} style={{ background: 'none', border: 'none', color: 'var(--accent-color)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}><Edit2 size={14} /> Edit</button>
+                <button type="button" onClick={() => handleRemove('gemini')} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}><Trash2 size={14} /> Remove</button>
+              </div>
+            ) : (
+              <div style={{ position: 'relative' }}>
+                <input 
+                  type={showGeminiKey ? "text" : "password"}
+                  placeholder="AIza..." 
+                  value={geminiKey}
+                  onChange={(e) => setGeminiKey(e.target.value)}
+                  style={{ width: '100%', padding: '12px', paddingRight: '40px', background: 'var(--system-msg-bg)', border: '1px solid var(--panel-border)', borderRadius: '8px', color: 'var(--text-primary)', outline: 'none' }}
+                />
+                <button 
+                  type="button"
+                  onClick={() => setShowGeminiKey(!showGeminiKey)}
+                  style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
+                >
+                  {showGeminiKey ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            )}
+            <small style={{ color: 'var(--text-secondary)' }}>Get your key from aistudio.google.com</small>
+          </div>
+
           <button 
             type="submit" 
-            disabled={isSaving || (!groqKey && !openRouterKey)}
+            disabled={isSaving || (!groqKey && !openRouterKey && !geminiKey)}
             style={{ 
               marginTop: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', 
-              opacity: (isSaving || (!groqKey && !openRouterKey)) ? 0.5 : 1,
+              opacity: (isSaving || (!groqKey && !openRouterKey && !geminiKey)) ? 0.5 : 1,
               background: 'var(--accent-color)', color: 'white', border: 'none', borderRadius: '8px', padding: '12px',
-              cursor: (isSaving || (!groqKey && !openRouterKey)) ? 'default' : 'pointer',
+              cursor: (isSaving || (!groqKey && !openRouterKey && !geminiKey)) ? 'default' : 'pointer',
               fontWeight: '600'
             }}
           >

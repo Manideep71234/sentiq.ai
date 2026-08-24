@@ -14,12 +14,15 @@ router = APIRouter(prefix="/settings", tags=["settings"])
 class APIKeysUpdate(BaseModel):
     groq_api_key: Optional[str] = None
     openrouter_api_key: Optional[str] = None
+    gemini_api_key: Optional[str] = None
 
 class APIKeysResponse(BaseModel):
     has_groq: bool
     has_openrouter: bool
+    has_gemini: bool
     groq_masked: Optional[str] = None
     openrouter_masked: Optional[str] = None
+    gemini_masked: Optional[str] = None
 
 def mask_key(key: str) -> str:
     if not key: return None
@@ -31,17 +34,20 @@ def mask_key(key: str) -> str:
 def get_api_keys(user: User = Depends(get_current_user), db: Session = Depends(get_session)):
     settings = db.exec(select(UserSettings).where(UserSettings.user_id == user.id)).first()
     if not settings:
-        return APIKeysResponse(has_groq=False, has_openrouter=False)
+        return APIKeysResponse(has_groq=False, has_openrouter=False, has_gemini=False)
     
     from core.security import decrypt_string
     groq_plain = decrypt_string(settings.groq_api_key) if settings.groq_api_key else None
     or_plain = decrypt_string(settings.openrouter_api_key) if settings.openrouter_api_key else None
+    gemini_plain = decrypt_string(settings.gemini_api_key) if settings.gemini_api_key else None
     
     return APIKeysResponse(
         has_groq=bool(settings.groq_api_key),
         has_openrouter=bool(settings.openrouter_api_key),
+        has_gemini=bool(settings.gemini_api_key),
         groq_masked=mask_key(groq_plain),
-        openrouter_masked=mask_key(or_plain)
+        openrouter_masked=mask_key(or_plain),
+        gemini_masked=mask_key(gemini_plain)
     )
 
 @router.post("/api-keys")
@@ -66,6 +72,15 @@ async def update_api_keys(keys: APIKeysUpdate, user: User = Depends(get_current_
             if resp.status_code != 200:
                 raise HTTPException(status_code=400, detail="Invalid OpenRouter API Key")
 
+    # Validate Gemini Key if provided
+    if keys.gemini_api_key:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(
+                f"https://generativelanguage.googleapis.com/v1beta/models?key={keys.gemini_api_key.strip()}"
+            )
+            if resp.status_code != 200:
+                raise HTTPException(status_code=400, detail="Invalid Gemini API Key")
+
     # Save to database
     settings = db.exec(select(UserSettings).where(UserSettings.user_id == user.id)).first()
     if not settings:
@@ -85,6 +100,12 @@ async def update_api_keys(keys: APIKeysUpdate, user: User = Depends(get_current_
         else:
             settings.openrouter_api_key = encrypt_string(keys.openrouter_api_key.strip())
             
+    if keys.gemini_api_key is not None:
+        if keys.gemini_api_key == "":
+            settings.gemini_api_key = None
+        else:
+            settings.gemini_api_key = encrypt_string(keys.gemini_api_key.strip())
+            
     settings.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     db.commit()
     
@@ -100,6 +121,12 @@ async def update_api_keys(keys: APIKeysUpdate, user: User = Depends(get_current_
             log_event(db, user.id, "api_key_removed", {"provider": "openrouter"})
         else:
             log_event(db, user.id, "api_key_added", {"provider": "openrouter"})
+            
+    if keys.gemini_api_key is not None:
+        if keys.gemini_api_key == "":
+            log_event(db, user.id, "api_key_removed", {"provider": "gemini"})
+        else:
+            log_event(db, user.id, "api_key_added", {"provider": "gemini"})
     
     return {"message": "API keys saved and validated successfully."}
 
