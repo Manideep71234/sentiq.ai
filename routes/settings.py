@@ -8,8 +8,14 @@ from datetime import datetime, timezone
 from core.database import get_session
 from core.models import User, UserSettings
 from core.auth import get_current_user
+from core.config import settings as app_settings
+import time
+import asyncio
 
 router = APIRouter(prefix="/settings", tags=["settings"])
+
+_model_cache = {} # Format: {(provider, api_key): {"timestamp": float, "models": list}}
+CACHE_TTL = 3600 # 1 hour
 
 class APIKeysUpdate(BaseModel):
     groq_api_key: Optional[str] = None

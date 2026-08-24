@@ -114,6 +114,14 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
   const [openRouterModels, setOpenRouterModels] = useState([
     { value: 'openrouter/auto', label: 'Auto Best Model (OpenRouter)' }
   ]);
+  const [groqModels, setGroqModels] = useState([
+    { value: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B (Groq)' },
+    { value: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B (Groq)' }
+  ]);
+  const [geminiModels, setGeminiModels] = useState([
+    { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
+    { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' }
+  ]);
 
   const fetchModels = async () => {
     try {
@@ -127,19 +135,18 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
         setHasAnyKey(false);
       }
 
-      const res = await fetch('https://openrouter.ai/api/v1/models');
-      const data = await res.json();
-
-      if (data && data.data) {
-        let models = data.data;
-        if (!hasCustomKey) {
-          models = models.filter(m => m.pricing && m.pricing.prompt === "0" && m.pricing.completion === "0");
+      const liveRes = await fetch(`/settings/models/live?t=${Date.now()}`);
+      if (liveRes.ok) {
+        const liveData = await liveRes.json();
+        if (liveData.openrouter && liveData.openrouter.length > 0) {
+          setOpenRouterModels(liveData.openrouter);
         }
-        const modelOptions = models.map(m => ({
-          value: m.id,
-          label: `${m.name} ${!hasCustomKey ? '(Free)' : ''}`
-        }));
-        setOpenRouterModels([{ value: 'openrouter/auto', label: 'Auto Best Model' }, ...modelOptions]);
+        if (liveData.groq && liveData.groq.length > 0) {
+          setGroqModels(liveData.groq);
+        }
+        if (liveData.gemini && liveData.gemini.length > 0) {
+          setGeminiModels(liveData.gemini);
+        }
       }
     } catch (err) {
       console.error("Failed to fetch models:", err);
@@ -159,15 +166,9 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
         { value: 'mistral', label: 'mistral (Ollama)' }
       ];
     } else if (prov === 'groq') {
-      return [
-        { value: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B (Groq)' },
-        { value: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B (Groq)' }
-      ];
+      return groqModels;
     } else if (prov === 'gemini') {
-      return [
-        { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
-        { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' }
-      ];
+      return geminiModels;
     } else if (prov === 'lmstudio') {
       return [
         { value: 'local-model', label: 'Local Model (LM Studio)' }
@@ -445,6 +446,12 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
     e?.preventDefault();
     if (!input.trim() && attachments.length === 0) return;
     if (isProcessing) return;
+
+    const availableOptions = getModelOptions(provider);
+    if (availableOptions.length > 0 && !availableOptions.find(o => o.value === model)) {
+      alert(`The selected model (${model}) is no longer available or has been deprecated by the provider. Please select a different model from the dropdown.`);
+      return;
+    }
 
     let userMsg = input.trim();
     

@@ -29,23 +29,30 @@ export default function CompareView() {
   const [openRouterModels, setOpenRouterModels] = useState([
     { value: 'openrouter/auto', label: 'Auto Best Model (OpenRouter)' }
   ]);
+  const [groqModels, setGroqModels] = useState([
+    { value: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B (Groq)' },
+    { value: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B (Groq)' }
+  ]);
+  const [geminiModels, setGeminiModels] = useState([
+    { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
+    { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' }
+  ]);
 
   useEffect(() => {
-    fetch('https://openrouter.ai/api/v1/models')
+    fetch(`/settings/models/live?t=${Date.now()}`)
       .then(res => res.json())
       .then(data => {
-        if (data && data.data) {
-          const freeModels = data.data
-            .filter(m => m.pricing && m.pricing.prompt === "0" && m.pricing.completion === "0")
-            .map(m => ({ value: m.id, label: `${m.name} (Free)` }));
-            
-          setOpenRouterModels([
-            { value: 'openrouter/auto', label: 'Auto Best Model' },
-            ...freeModels
-          ]);
+        if (data.openrouter && data.openrouter.length > 0) {
+          setOpenRouterModels(data.openrouter);
+        }
+        if (data.groq && data.groq.length > 0) {
+          setGroqModels(data.groq);
+        }
+        if (data.gemini && data.gemini.length > 0) {
+          setGeminiModels(data.gemini);
         }
       })
-      .catch(err => console.error("Failed to fetch OpenRouter models:", err));
+      .catch(err => console.error("Failed to fetch live models:", err));
   }, []);
 
   const getModelOptions = (prov) => {
@@ -55,15 +62,9 @@ export default function CompareView() {
         { value: 'mistral', label: 'mistral (Ollama)' }
       ];
     } else if (prov === 'groq') {
-      return [
-        { value: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B (Groq)' },
-        { value: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B (Groq)' }
-      ];
+      return groqModels;
     } else if (prov === 'gemini') {
-      return [
-        { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
-        { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' }
-      ];
+      return geminiModels;
     } else if (prov === 'lmstudio') {
       return [
         { value: 'local-model', label: 'Local Model (LM Studio)' }
@@ -136,6 +137,18 @@ export default function CompareView() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!input.trim() || leftState.isProcessing || rightState.isProcessing) return;
+
+    const leftOptions = getModelOptions(leftProvider);
+    if (leftOptions.length > 0 && !leftOptions.find(o => o.value === leftModel)) {
+      alert(`The selected model (${leftModel}) is no longer available on ${leftProvider}. Please select a different model.`);
+      return;
+    }
+
+    const rightOptions = getModelOptions(rightProvider);
+    if (rightOptions.length > 0 && !rightOptions.find(o => o.value === rightModel)) {
+      alert(`The selected model (${rightModel}) is no longer available on ${rightProvider}. Please select a different model.`);
+      return;
+    }
     
     runModel(leftProvider, leftModel, setLeftState, 'left');
     runModel(rightProvider, rightModel, setRightState, 'right');

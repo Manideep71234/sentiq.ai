@@ -49,7 +49,10 @@ function LogoutView() {
 }
 
 function App() {
-  const [activeView, setActiveView] = useState('chat');
+  const [activeView, setActiveView] = useState(() => {
+    const hash = window.location.hash.replace('#', '');
+    return hash || 'chat';
+  });
   const [user, setUser] = useState({ username: 'Loading...' });
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
   const [showStartup, setShowStartup] = useState(true);
@@ -62,6 +65,10 @@ function App() {
     const timer = setTimeout(() => setShowStartup(false), 2500);
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    window.location.hash = activeView;
+  }, [activeView]);
 
 
 
@@ -229,7 +236,7 @@ function App() {
               <SettingsAPIKeys />
             </div>
             <div style={{ display: activeView === 'profile' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
-              <ProfileView user={user} setUser={setUser} />
+              <ProfileView user={user} setUser={setUser} setActiveView={setActiveView} />
             </div>
             <div style={{ display: activeView === 'compare' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
               <CompareView />

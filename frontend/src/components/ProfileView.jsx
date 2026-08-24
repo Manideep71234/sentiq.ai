@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { User, LogOut, Camera, Save, CheckCircle2, AlertCircle, Trash2, Key, TrendingUp } from 'lucide-react';
+import { User as UserIcon, Lock, Mail, Key, Image as ImageIcon, CheckCircle2, AlertCircle, TrendingUp, KeyRound } from 'lucide-react';
 
-export default function ProfileView({ user, setUser }) {
+export default function ProfileView({ user, setUser, setActiveView }) {
   const [fullName, setFullName] = useState(user?.full_name || '');
   const [username, setUsername] = useState(user?.username || '');
   const [email, setEmail] = useState(user?.email || '');
@@ -368,6 +368,31 @@ export default function ProfileView({ user, setUser }) {
           </div>
         </div>
         
+        {/* API Keys Shortcut */}
+        <div style={{ 
+          background: 'var(--panel-bg)', 
+          border: '1px solid var(--panel-border)', 
+          borderRadius: '16px', 
+          padding: '32px',
+          boxShadow: 'var(--shadow-subtle)'
+        }}>
+          <h3 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600', color: 'var(--text-primary)' }}>Integrations</h3>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '14px' }}>
+            Configure your API keys to unlock dynamic models from Groq, OpenRouter, and Google Gemini.
+          </p>
+          <button 
+            type="button"
+            onClick={() => setActiveView('api-keys')}
+            style={{ 
+              display: 'flex', alignItems: 'center', gap: '8px',
+              padding: '12px 24px', background: 'var(--bg-accent-muted)', color: 'var(--accent-color)', 
+              border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '500', transition: 'background 0.2s' 
+            }}>
+            <KeyRound size={18} />
+            Manage API Keys
+          </button>
+        </div>
+
         {/* Extra spacing at bottom */}
         <div style={{ height: '32px' }}></div>
       </div>
