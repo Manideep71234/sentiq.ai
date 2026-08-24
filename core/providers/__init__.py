@@ -38,9 +38,10 @@ def get_provider(provider_name: str, user_settings: Optional[UserSettings] = Non
         return OpenAICompatProvider("https://openrouter.ai/api/v1", api_key)
         
     elif provider_name.lower() == "gemini":
-        if not settings.GEMINI_API_KEY:
-            raise ValueError("Gemini API key is missing from environment.")
-        return GeminiProvider(settings.GEMINI_API_KEY)
+        api_key = resolve_key(user_settings.gemini_api_key if user_settings else None, getattr(settings, "GEMINI_API_KEY", None))
+        if not api_key:
+            raise ValueError("Gemini API key is missing. Please configure it in Settings.")
+        return GeminiProvider(api_key)
         
     else:
         raise ValueError(f"Unknown provider: {provider_name}")
