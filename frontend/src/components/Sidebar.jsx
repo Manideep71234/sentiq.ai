@@ -10,7 +10,6 @@ export default function Sidebar({ activeView, setActiveView, user, toggleTheme, 
     { id: 'notes', icon: FileEdit, label: 'Notes' },
     { id: 'calendar', icon: Calendar, label: 'Calendar' },
     { id: 'compare', icon: GitCompare, label: 'Compare' },
-    { id: 'studio', icon: Wand2, label: 'Studio' },
     { id: 'api-keys', icon: Key, label: 'API Keys' },
     { id: 'settings', icon: Settings, label: 'Settings' },
   ];

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Menu } from 'lucide-react';
+import { Menu, Wand2, MessageSquare } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import MouseTracker from './components/MouseTracker';
 import ChatView from './components/ChatView';
@@ -164,10 +164,42 @@ function App() {
           </button>
 
           {activeView !== 'documents' && activeView !== 'email' && activeView !== 'notes' && activeView !== 'calendar' && activeView !== 'settings' && activeView !== 'scheduled-tasks' && activeView !== 'api-keys' && activeView !== 'compare' && activeView !== 'profile' && activeView !== 'admin' && (
-            <header className="chat-header">
-              <h2 key={chatTitle} className="animate-fade-in">
-                {activeView === 'chat' ? chatTitle : activeView.charAt(0).toUpperCase() + activeView.slice(1)}
-              </h2>
+            <header className="chat-header" style={{ position: 'relative' }}>
+              <div className="chat-header-title-container" style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
+                <h2 key={chatTitle} className="animate-fade-in chat-header-title" style={{ margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {activeView === 'chat' ? chatTitle : activeView.charAt(0).toUpperCase() + activeView.slice(1)}
+                </h2>
+              </div>
+              
+              {(activeView === 'chat' || activeView === 'studio') && (
+                <div className="chat-header-segmented-container" style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', display: 'flex', zIndex: 10 }}>
+                  <div className="segmented-control">
+                    <div 
+                      className={`segment-indicator ${activeView === 'studio' ? 'studio' : 'chat'}`} 
+                      style={{
+                        transform: activeView === 'studio' ? 'translateX(100%)' : 'translateX(0)',
+                        width: '50%'
+                      }}
+                    />
+                    <button 
+                      className={`segment-btn ${activeView === 'chat' ? 'active chat' : ''}`}
+                      onClick={() => setActiveView('chat')}
+                      style={{ width: '100px' }}
+                    >
+                      <MessageSquare size={16} /> Chat
+                    </button>
+                    <button 
+                      className={`segment-btn ${activeView === 'studio' ? 'active studio' : ''}`}
+                      onClick={() => setActiveView('studio')}
+                      style={{ width: '100px' }}
+                    >
+                      <Wand2 size={16} /> Studio
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              <div style={{ flex: 1 }}></div>
             </header>
           )}
 
