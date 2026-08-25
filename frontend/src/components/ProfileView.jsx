@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { User as UserIcon, Lock, Mail, Key, Image as ImageIcon, CheckCircle2, AlertCircle, TrendingUp, KeyRound } from 'lucide-react';
+import { User as UserIcon, Lock, Mail, Key, Image as ImageIcon, CheckCircle2, AlertCircle, TrendingUp, KeyRound, LogOut, Camera, Save, Trash2 } from 'lucide-react';
 
 export default function ProfileView({ user, setUser, setActiveView }) {
   const [fullName, setFullName] = useState(user?.full_name || '');
