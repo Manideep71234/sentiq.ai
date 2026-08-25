@@ -194,7 +194,7 @@ export default function ProfileView({ user, setUser, setActiveView }) {
   return (
     <div className="view-container fade-in" style={{ overflowY: 'auto' }}>
       <div className="view-header">
-        <h2><User className="icon" style={{ marginRight: '8px' }} /> Profile Settings</h2>
+        <h2><UserIcon className="icon" style={{ marginRight: '8px' }} /> Profile Settings</h2>
       </div>
       
       <div className="settings-content" style={{ maxWidth: '600px', margin: '0 auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
