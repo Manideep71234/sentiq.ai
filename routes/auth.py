@@ -63,11 +63,13 @@ def register(request: Request, register_data: LoginRequest, db: Session = Depend
 @router.post("/login")
 @limiter.limit("5/minute")
 def login(request: Request, response: Response, login_data: LoginRequest, db: Session = Depends(get_session)):
-    user = db.exec(select(User).where(User.username == login_data.username)).first()
+    user = db.exec(select(User).where(
+        (User.username == login_data.username) | (User.email == login_data.username)
+    )).first()
     if not user or not verify_password(login_data.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password"
+            detail="Incorrect username/email or password"
         )
     
     session_id = generate_session_id()
