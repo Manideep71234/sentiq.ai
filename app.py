@@ -45,19 +45,7 @@ async def lifespan(app: FastAPI):
     # Initialize Database
     SQLModel.metadata.create_all(engine)
     
-    # Manual Schema Migration for SQLite (adding new columns to User table)
-    from sqlalchemy import text
-    with Session(engine) as session:
-        try:
-            # Check if is_active column exists
-            session.exec(text("SELECT is_active FROM user LIMIT 1"))
-        except Exception:
-            # Column doesn't exist, we must be on an older version. Alter table!
-            session.exec(text("ALTER TABLE user ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT 1"))
-            session.exec(text("ALTER TABLE user ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP"))
-            session.exec(text("ALTER TABLE user ADD COLUMN last_login DATETIME"))
-            session.commit()
-            logger.info("Migrated user table to add is_active, created_at, and last_login.")
+    # Manual Schema Migration for SQLite removed in favor of proper migrations.
     
     # Start scheduler
     start_scheduler()

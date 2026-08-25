@@ -3,6 +3,7 @@ from sqlmodel import Field, SQLModel
 from datetime import datetime, timezone
 
 class User(SQLModel, table=True):
+    __tablename__ = "users"
     id: Optional[int] = Field(default=None, primary_key=True)
     username: str = Field(unique=True, index=True)
     email: Optional[str] = Field(default=None, unique=True, index=True)
@@ -19,7 +20,7 @@ class InviteCode(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     code: str = Field(index=True, unique=True)
     is_used: bool = Field(default=False)
-    created_by: int = Field(foreign_key="user.id")
+    created_by: int = Field(foreign_key="users.id")
     used_by: Optional[int] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
@@ -35,17 +36,17 @@ class PasskeyCredential(SQLModel, table=True):
     credential_id: str = Field(index=True, unique=True)
     public_key: bytes
     sign_count: int = Field(default=0)
-    user_id: int = Field(foreign_key="user.id", index=True)
+    user_id: int = Field(foreign_key="users.id", index=True)
 
 class SessionModel(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     session_id: str = Field(unique=True, index=True)
-    user_id: int = Field(foreign_key="user.id")
+    user_id: int = Field(foreign_key="users.id")
     expires_at: datetime
 
 class ChatSession(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user.id")
+    user_id: int = Field(foreign_key="users.id")
     title: str = Field(default="New Chat")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
@@ -60,7 +61,7 @@ class ChatMessage(SQLModel, table=True):
 
 class UsageLog(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user.id", index=True)
+    user_id: int = Field(foreign_key="users.id", index=True)
     model_name: str
     prompt_tokens: int = Field(default=0)
     completion_tokens: int = Field(default=0)
@@ -70,7 +71,7 @@ class UsageLog(SQLModel, table=True):
 
 class Skill(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user.id")
+    user_id: int = Field(foreign_key="users.id")
     name: str = Field(index=True)
     description: str
     prompt: str
@@ -78,13 +79,13 @@ class Skill(SQLModel, table=True):
 
 class MemoryEntry(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user.id")
+    user_id: int = Field(foreign_key="users.id")
     content: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
 class ResearchReport(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user.id", index=True)
+    user_id: int = Field(foreign_key="users.id", index=True)
     query: str
     report_markdown: str
     sources_json: str
@@ -92,7 +93,7 @@ class ResearchReport(SQLModel, table=True):
 
 class UserSettings(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user.id", unique=True, index=True)
+    user_id: int = Field(foreign_key="users.id", unique=True, index=True)
     groq_api_key: Optional[str] = None
     openrouter_api_key: Optional[str] = None
     gemini_api_key: Optional[str] = None
@@ -101,7 +102,7 @@ class UserSettings(SQLModel, table=True):
 
 class Document(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user.id", index=True)
+    user_id: int = Field(foreign_key="users.id", index=True)
     title: str = Field(default="Untitled Document")
     doc_type: str = Field(default="markdown") # markdown, html, csv
     content: str = Field(default="")
@@ -117,7 +118,7 @@ class DocumentVersion(SQLModel, table=True):
 # Phase 5 Models
 class EmailAccount(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user.id", index=True)
+    user_id: int = Field(foreign_key="users.id", index=True)
     imap_host: str
     imap_port: int = 993
     smtp_host: str
@@ -140,7 +141,7 @@ class EmailThreadCache(SQLModel, table=True):
 
 class CalendarAccount(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user.id", index=True)
+    user_id: int = Field(foreign_key="users.id", index=True)
     caldav_url: Optional[str] = None
     username: Optional[str] = None
     encrypted_password: Optional[str] = None
@@ -150,7 +151,7 @@ class CalendarAccount(SQLModel, table=True):
 
 class Note(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user.id", index=True)
+    user_id: int = Field(foreign_key="users.id", index=True)
     title: str = Field(default="Untitled Note")
     body: str = Field(default="")
     tags: Optional[str] = None # Comma-separated or JSON
@@ -159,7 +160,7 @@ class Note(SQLModel, table=True):
 
 class Task(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user.id", index=True)
+    user_id: int = Field(foreign_key="users.id", index=True)
     title: str
     description: Optional[str] = None
     due_date: Optional[datetime] = None
@@ -168,7 +169,7 @@ class Task(SQLModel, table=True):
 
 class ScheduledTask(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user.id", index=True)
+    user_id: int = Field(foreign_key="users.id", index=True)
     name: str
     prompt: str
     cron_expression: str # e.g. "0 8 * * *"

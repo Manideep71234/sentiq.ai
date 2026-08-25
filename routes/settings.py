@@ -198,7 +198,7 @@ def delete_account(user: User = Depends(get_current_user), db: Session = Depends
     db.exec(text("DELETE FROM skill WHERE user_id = :uid"), uid)
     db.exec(text("DELETE FROM emailaccount WHERE user_id = :uid"), uid)
     
-    db.exec(text("DELETE FROM user WHERE id = :uid"), uid)
+    db.exec(text("DELETE FROM users WHERE id = :uid"), uid)
     db.commit()
     
     response = JSONResponse(content={"message": "Account deleted successfully"})
