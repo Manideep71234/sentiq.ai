@@ -46,15 +46,18 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
 
   useEffect(() => {
     const renderer = new marked.Renderer();
-    renderer.code = (code, language) => {
-      const escapedCode = code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    renderer.code = (tokenOrCode, language) => {
+      const codeStr = typeof tokenOrCode === 'string' ? tokenOrCode : tokenOrCode.text || '';
+      const lang = typeof tokenOrCode === 'string' ? language : tokenOrCode.lang;
+      
+      const escapedCode = codeStr.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
       return `
         <div class="code-wrapper">
           <div class="code-header">
-            <span class="code-language">${language || 'text'}</span>
+            <span class="code-language">${lang || 'text'}</span>
             <button class="copy-btn" data-code="${escapedCode}">Copy</button>
           </div>
-          <pre><code class="language-${language || 'text'}">${escapedCode}</code></pre>
+          <pre><code class="language-${lang || 'text'}">${escapedCode}</code></pre>
         </div>
       `;
     };
