@@ -82,6 +82,9 @@ export default function Sidebar({ activeView, setActiveView, user, toggleTheme, 
             <span>Sentiq<span style={{ color: 'var(--accent-color)' }}>.AI</span></span>
           </div>
           <div style={{ display: 'flex', gap: '0.25rem' }}>
+            <button className="theme-toggle" onClick={() => setActiveView('api-keys')} title="API Keys" style={isCollapsed ? { display: 'none' } : {}}>
+              <Key size={14} />
+            </button>
             <button className="theme-toggle" onClick={() => setIsCollapsed(!isCollapsed)} title="Toggle Sidebar">
               {isCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
             </button>

@@ -288,6 +288,15 @@ h4 {
   position: relative;
 }
 
+.sidebar nav::-webkit-scrollbar {
+  display: none;
+}
+
+.sidebar nav {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
 .sidebar.collapsed {
   width: 80px;
   padding: 1.5rem 0.5rem;
