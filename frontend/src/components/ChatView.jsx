@@ -529,10 +529,23 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
   const renderContent = (content) => {
     if (!content) return { __html: '' };
     // Replace [Image: /data/uploads/xyz.jpg] with markdown image syntax
-    const withImages = content.replace(/\[Image:\s*(\/data\/uploads\/[^\]]+)\]/g, '![Attachment]($1)');
+    let processed = content.replace(/\[Image:\s*(\/data\/uploads\/[^\]]+)\]/g, '![Attachment]($1)');
     // Strip [Attached File: filename] blocks for display or format them nicely
-    const withFiles = withImages.replace(/\[Attached File:\s*([^\]]+)\]/g, '> 📎 **Attached Document:** $1\n');
-    return { __html: DOMPurify.sanitize(marked.parse(withFiles)) };
+    processed = processed.replace(/\[Attached File:\s*([^\]]+)\]/g, '> 📎 **Attached Document:** $1\n');
+    
+    // Support [MAP: location] tags for Google Maps embeds
+    processed = processed.replace(/\[MAP:\s*([^\]]+)\]/gi, (match, location) => {
+      const encodedLoc = encodeURIComponent(location.trim());
+      return `<iframe width="100%" height="300" frameborder="0" style="border:0; border-radius: 12px; margin: 10px 0;" src="https://maps.google.com/maps?q=${encodedLoc}&output=embed" allowfullscreen></iframe>`;
+    });
+
+    // Configure DOMPurify to allow iframes for Google Maps
+    const sanitizedHTML = DOMPurify.sanitize(marked.parse(processed), {
+      ADD_TAGS: ['iframe'],
+      ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'marginheight', 'marginwidth']
+    });
+
+    return { __html: sanitizedHTML };
   };
 
   return (

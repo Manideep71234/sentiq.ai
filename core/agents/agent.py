@@ -57,10 +57,13 @@ async def run_agent_loop(
     if all_tools:
         system_prompt += "1. For casual greetings (e.g., 'hi', 'hello'), conversational chatter, or simple questions, respond directly WITHOUT calling any tools. You do not need a tool to say hello.\n"
         system_prompt += "2. You have tools available (e.g., web_search, read_file). Use them ONLY when a question requires specific, external, or current information. DO NOT GUESS.\n"
-        system_prompt += "3. DO NOT call any tool unless it is strictly necessary to answer the user's prompt. Do not hallucinate tools or files.\n\n"
+        system_prompt += "3. DO NOT call any tool unless it is strictly necessary to answer the user's prompt. Do not hallucinate tools or files.\n"
     else:
         system_prompt += "1. Respond directly to the user in a helpful, friendly, and conversational manner.\n"
-        system_prompt += "2. Do NOT output any JSON, XML, or structured tool calling formats. Just provide plain text responses.\n\n"
+        system_prompt += "2. Do NOT output any JSON, XML, or structured tool calling formats. Just provide plain text responses.\n"
+        
+    system_prompt += "4. MAPS: If the user asks to see a map or location, output exactly this tag: [MAP: location query]. Example: [MAP: Paris, France]. The UI will render an interactive map.\n"
+    system_prompt += "5. IMAGES: If the user asks to generate or show an image, use standard markdown image syntax pointing to Pollinations AI: ![description](https://image.pollinations.ai/prompt/URL_ENCODED_PROMPT). Example: ![A futuristic city](https://image.pollinations.ai/prompt/A%20futuristic%20city)\n\n"
         
     if memories_content:
         system_prompt += "User's Long-term Memory:\n" + "\n".join([f"- {m}" for m in memories_content]) + "\n\n"

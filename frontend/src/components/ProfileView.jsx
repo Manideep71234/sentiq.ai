@@ -192,7 +192,7 @@ export default function ProfileView({ user, setUser, setActiveView }) {
   };
 
   return (
-    <div className="view-container fade-in">
+    <div className="view-transition" style={{ flex: 1, overflow: 'hidden' }}>
       <div className="settings-content" style={{ margin: '0 auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '32px', maxWidth: '850px', width: '100%' }}>
         
         {/* Modern Profile Header Card */}
