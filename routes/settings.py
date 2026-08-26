@@ -136,6 +136,25 @@ async def update_api_keys(keys: APIKeysUpdate, user: User = Depends(get_current_
     
     return {"message": "API keys saved and validated successfully."}
 
+@router.get("/models/live")
+async def get_live_models(user: User = Depends(get_current_user), db: Session = Depends(get_session)):
+    settings = db.exec(select(UserSettings).where(UserSettings.user_id == user.id)).first()
+    
+    # Normally this would fetch from APIs, but for now we return standard options
+    # or empty if they aren't configured, depending on the frontend's expectation.
+    # The frontend falls back to its default models if this returns empty, but it expects a 200.
+    return {
+        "openrouter": [],
+        "groq": [
+            { "value": "llama-3.1-8b-instant", "label": "Llama 3.1 8B (Groq)" },
+            { "value": "llama-3.3-70b-versatile", "label": "Llama 3.3 70B (Groq)" }
+        ],
+        "gemini": [
+            { "value": "gemini-2.5-flash", "label": "Gemini 2.5 Flash" },
+            { "value": "gemini-2.5-pro", "label": "Gemini 2.5 Pro" }
+        ]
+    }
+
 @router.get("/export-data")
 def export_user_data(user: User = Depends(get_current_user), db: Session = Depends(get_session)):
     import json

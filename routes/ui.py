@@ -10,7 +10,7 @@ templates = Jinja2Templates(directory="static")
 from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 import os
 
-@router.get("/", response_class=HTMLResponse)
+@router.api_route("/", methods=["GET", "HEAD"], response_class=HTMLResponse)
 def index(request: Request, user: User | None = Depends(get_current_user_optional)):
     if not user:
         return RedirectResponse(url="/login", status_code=302)

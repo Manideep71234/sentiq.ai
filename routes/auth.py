@@ -49,8 +49,12 @@ def register(request: Request, register_data: LoginRequest, db: Session = Depend
         is_admin=is_first_user
     )
     db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    try:
+        db.commit()
+        db.refresh(new_user)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error during registration: {str(e)}")
 
     if not is_first_user and register_data.invite_code:
         invite.is_used = True
