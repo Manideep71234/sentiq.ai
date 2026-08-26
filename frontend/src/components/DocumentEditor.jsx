@@ -6,6 +6,24 @@ import {
   CheckSquare, Link2, Highlighter, Heading1, Heading2, Heading3, Table as TableIcon,
   Undo, Redo, X, Bot, Send, Sparkles, Check
 } from 'lucide-react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import { StarterKit } from '@tiptap/starter-kit';
+import { Table } from '@tiptap/extension-table';
+import { TableRow } from '@tiptap/extension-table-row';
+import { TableCell } from '@tiptap/extension-table-cell';
+import { TableHeader } from '@tiptap/extension-table-header';
+import { TextAlign } from '@tiptap/extension-text-align';
+import { Color } from '@tiptap/extension-color';
+import { TextStyle } from '@tiptap/extension-text-style';
+import { TaskList } from '@tiptap/extension-task-list';
+import { TaskItem } from '@tiptap/extension-task-item';
+import { Link } from '@tiptap/extension-link';
+import { Underline } from '@tiptap/extension-underline';
+import { Highlight } from '@tiptap/extension-highlight';
+import { CharacterCount } from '@tiptap/extension-character-count';
+
+import AIFloatingToolbar from './AIFloatingToolbar';
+import CSVGridEditor from './CSVGridEditor';
 
 function FindAndReplace({ editor, onClose }) {
   const [searchTerm, setSearchTerm] = useState('');
