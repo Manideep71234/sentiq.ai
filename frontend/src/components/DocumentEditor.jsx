@@ -1,3 +1,5 @@
+import { useState, useEffect, useRef, useCallback } from 'react';
+import DOMPurify from 'dompurify';
 import { 
   Clock, Save, FileSpreadsheet, Search, Bold, Italic, Underline as UnderlineIcon, 
   Strikethrough, AlignLeft, AlignCenter, AlignRight, AlignJustify, List, ListOrdered, 
