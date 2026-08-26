@@ -345,16 +345,7 @@ export default function DocumentEditor({ doc, onUpdate, onToggleVersions }) {
     },
   }, []); // Initialize once, manage content updates via useEffect
 
-  // Update state when active doc changes
-  useEffect(() => {
-    setTitle(doc.title);
-    setContent(doc.content);
-    setDocType(doc.doc_type);
-    setLastSaved(doc.updated_at);
-    if (editor && !editor.isDestroyed && doc.doc_type !== 'csv' && editor.getHTML() !== doc.content) {
-      editor.commands.setContent(DOMPurify.sanitize(doc.content));
-    }
-  }, [doc.id, editor]);
+  // removed doc.id useEffect sync as DocumentManager now uses key={activeDoc.id}
 
   // Debounced auto-save (2 seconds)
   useEffect(() => {

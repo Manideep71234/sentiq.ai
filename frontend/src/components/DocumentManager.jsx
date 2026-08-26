@@ -164,6 +164,7 @@ export default function DocumentManager({ user }) {
         </div>
         <div style={{ flex: 1, display: 'flex', position: 'relative' }}>
           <DocumentEditor 
+            key={activeDoc.id}
             doc={activeDoc} 
             onUpdate={(updatedDoc) => {
               setActiveDoc(updatedDoc);
