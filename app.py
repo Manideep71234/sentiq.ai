@@ -52,26 +52,31 @@ async def lifespan(app: FastAPI):
     sync_db_tasks()
     
     # Check for admin user and create if not exists
-    with Session(engine) as session:
-        admin_user = session.exec(select(User).where(User.username == "admin")).first()
-        if not admin_user:
-            password = os.environ.get("DEFAULT_ADMIN_PASSWORD", "admin")
-            hashed = get_password_hash(password)
+    try:
+        with Session(engine) as session:
+            admin_email = os.environ.get("ADMIN_EMAIL")
+            admin_password = os.environ.get("ADMIN_PASSWORD")
             
-            new_admin = User(
-                username="admin",
-                password_hash=hashed,
-                is_admin=True
-            )
-            session.add(new_admin)
-            session.commit()
-            
-            logger.warning("="*50)
-            logger.warning("FIRST RUN ADMIN PASSWORD GENERATED:")
-            logger.warning(f"Username: admin")
-            logger.warning(f"Password: {password}")
-            logger.warning("PLEASE SAVE THIS PASSWORD SECURELY.")
-            logger.warning("="*50)
+            if not admin_email or not admin_password:
+                logger.warning("ADMIN_EMAIL or ADMIN_PASSWORD not set in environment, skipping admin auto-seed.")
+            else:
+                existing_admin = session.exec(select(User).where((User.username == admin_email) | (User.email == admin_email))).first()
+                if not existing_admin:
+                    hashed = get_password_hash(admin_password)
+                    
+                    new_admin = User(
+                        username=admin_email,
+                        email=admin_email,
+                        password_hash=hashed,
+                        is_admin=True,
+                        is_active=True
+                    )
+                    session.add(new_admin)
+                    session.commit()
+                    
+                    logger.info(f"Successfully auto-seeded admin account: {admin_email}")
+    except Exception as e:
+        logger.error(f"WARNING: Failed to auto-seed admin account (database may be unreachable or schema out of sync): {e}")
             
     yield
 
