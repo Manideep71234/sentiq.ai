@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, FileText, Trash2, FileSpreadsheet, LayoutGrid, X, Sparkles, Loader2, ArrowLeft } from 'lucide-react';
+import { Plus, FileText, Trash2, FileSpreadsheet, LayoutGrid, X, Sparkles, Loader2, ArrowLeft, Clock } from 'lucide-react';
 import DocumentEditor from './DocumentEditor';
 import VersionHistory from './VersionHistory';
 
