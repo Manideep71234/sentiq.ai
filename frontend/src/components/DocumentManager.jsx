@@ -106,7 +106,7 @@ export default function DocumentManager({ user }) {
         body: JSON.stringify({ title: 'Untitled Document', doc_type: 'html', content: '' })
       });
       const newDoc = await res.json();
-      setDocuments([newDoc, ...documents]);
+      setDocuments(prev => [newDoc, ...prev]);
       setActiveDoc(newDoc);
       setShowVersions(false);
       setIsModalOpen(false);
@@ -128,7 +128,7 @@ export default function DocumentManager({ user }) {
     }
     
     const newDoc = await res.json();
-    setDocuments([newDoc, ...documents]);
+    setDocuments(prev => [newDoc, ...prev]);
     setActiveDoc(newDoc);
     setShowVersions(false);
     setIsModalOpen(false);
@@ -140,7 +140,7 @@ export default function DocumentManager({ user }) {
     
     try {
       await fetch(`/documents/${id}`, { method: 'DELETE' });
-      setDocuments(documents.filter(d => d.id !== id));
+      setDocuments(prev => prev.filter(d => d.id !== id));
       if (activeDoc?.id === id) {
         setActiveDoc(null);
         setShowVersions(false);

@@ -61,6 +61,10 @@ async def generate_document(req: GenerateDocumentRequest, user: User = Depends(g
         async for chunk in provider.generate_stream(messages, model=req.model):
             if chunk.get("type") == "content":
                 full_content += chunk.get("delta", "")
+            elif "error" in chunk:
+                if not full_content:
+                    raise Exception(chunk.get("error"))
+                break
                 
         # Clean up any markdown blocks if the model ignored instructions
         content = full_content.strip()
@@ -199,6 +203,8 @@ async def websocket_ai_edit(websocket: WebSocket, doc_id: int):
             await websocket.send_json({"error": "Authentication required"})
             await websocket.close()
             return
+            
+        user_settings = db.exec(select(UserSettings).where(UserSettings.user_id == user.id)).first()
     
         doc = db.exec(select(Document).where(Document.id == doc_id, Document.user_id == user.id)).first()
         if not doc:
@@ -236,14 +242,17 @@ Output ONLY the final replacement text. Do not output markdown code blocks unles
 """
 
             messages = [{"role": "user", "content": prompt}]
-            provider = get_provider(provider_name)
+            provider = get_provider(provider_name, user_settings)
             
             try:
-                async for chunk in provider.stream(messages, model):
-                    if chunk.choices and len(chunk.choices) > 0:
-                        delta = chunk.choices[0].delta.content or ""
+                async for chunk in provider.generate_stream(messages, model):
+                    if chunk.get("type") == "content":
+                        delta = chunk.get("delta", "")
                         if delta:
                             await websocket.send_json({"type": "content", "content": delta})
+                    elif "error" in chunk:
+                        await websocket.send_json({"error": chunk.get("error")})
+                        break
                             
                 await websocket.send_json({"type": "done"})
             except (WebSocketDisconnect, RuntimeError):
