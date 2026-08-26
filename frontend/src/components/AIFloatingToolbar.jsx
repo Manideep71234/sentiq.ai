@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Wand2, X, Check } from 'lucide-react';
 
-export default function AIFloatingToolbar({ editorRef, docId, onContentChange }) {
+export default function AIFloatingToolbar({ editorRef, docId, onContentChange, tipTapEditor = null }) {
   const [selectionRange, setSelectionRange] = useState(null);
   const [position, setPosition] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -51,6 +51,10 @@ export default function AIFloatingToolbar({ editorRef, docId, onContentChange })
     setShowCustom(false);
     setPosition(null);
 
+    if (tipTapEditor) {
+      tipTapEditor.setEditable(false);
+    }
+
     const originalText = selectionRange.toString();
     
     // Create diff node
@@ -87,6 +91,11 @@ export default function AIFloatingToolbar({ editorRef, docId, onContentChange })
       if (ws) ws.close();
       setIsProcessing(false);
       diffContainer.replaceWith(document.createTextNode(originalText));
+      
+      if (tipTapEditor) {
+        tipTapEditor.setEditable(true);
+      }
+      
       onContentChange(editorRef.current.innerHTML);
       setDiffNode(null);
     };
@@ -152,6 +161,9 @@ export default function AIFloatingToolbar({ editorRef, docId, onContentChange })
         acceptBtn.style.cursor = 'pointer';
         acceptBtn.onclick = () => {
           diffContainer.replaceWith(document.createTextNode(fullSuggestion));
+          if (tipTapEditor) {
+            tipTapEditor.setEditable(true);
+          }
           onContentChange(editorRef.current.innerHTML);
           setDiffNode(null);
         };
@@ -165,6 +177,9 @@ export default function AIFloatingToolbar({ editorRef, docId, onContentChange })
         rejectBtn.style.cursor = 'pointer';
         rejectBtn.onclick = () => {
           diffContainer.replaceWith(document.createTextNode(originalText));
+          if (tipTapEditor) {
+            tipTapEditor.setEditable(true);
+          }
           onContentChange(editorRef.current.innerHTML);
           setDiffNode(null);
         };

@@ -3,10 +3,17 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException, status
 from sqlmodel import Session, select
 from core.database import get_session
-from core.models import User, Document, DocumentVersion, SessionModel
+from core.models import User, Document, DocumentVersion, SessionModel, UserSettings
 from core.auth import get_current_user
 from core.documents.versioning import create_snapshot_if_needed
 from core.providers import get_provider
+from pydantic import BaseModel
+import asyncio
+
+class GenerateDocumentRequest(BaseModel):
+    prompt: str
+    provider: str = "openrouter"
+    model: str = "openrouter/free"
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -34,6 +41,53 @@ def create_document(doc_data: dict, user: User = Depends(get_current_user), db: 
     # Create initial snapshot
     create_snapshot_if_needed(db, new_doc, force=True)
     return new_doc
+
+@router.post("/generate")
+async def generate_document(req: GenerateDocumentRequest, user: User = Depends(get_current_user), db: Session = Depends(get_session)):
+    user_settings = db.exec(select(UserSettings).where(UserSettings.user_id == user.id)).first()
+    provider = get_provider(req.provider, user_settings)
+    if not provider:
+        raise HTTPException(status_code=400, detail="Invalid provider")
+        
+    system_prompt = "You are a professional document writer. Generate a document based on the user's prompt. Format the response entirely in clean HTML. Use semantic tags like <h1>, <h2>, <p>, <ul>, <li>, <table>, etc. Do not include markdown codeblocks like ```html, just return the raw HTML string."
+    
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": req.prompt}
+    ]
+    
+    full_content = ""
+    try:
+        async for chunk in provider.generate_stream(messages, model=req.model):
+            if chunk.get("type") == "content":
+                full_content += chunk.get("delta", "")
+                
+        # Clean up any markdown blocks if the model ignored instructions
+        content = full_content.strip()
+        if content.startswith("```html"):
+            content = content[7:]
+        elif content.startswith("```"):
+            content = content[3:]
+        if content.endswith("```"):
+            content = content[:-3]
+        content = content.strip()
+        
+        new_doc = Document(
+            user_id=user.id,
+            title="Generated Document",
+            doc_type="html",
+            content=content
+        )
+        db.add(new_doc)
+        db.commit()
+        db.refresh(new_doc)
+        create_snapshot_if_needed(db, new_doc, force=True)
+        
+        return new_doc
+    except Exception as e:
+        import logging
+        logging.error(f"Error generating document: {e}")
+        raise HTTPException(status_code=500, detail=f"Generation failed: {str(e)}")
 
 @router.get("/{doc_id}")
 def get_document(doc_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_session)):
