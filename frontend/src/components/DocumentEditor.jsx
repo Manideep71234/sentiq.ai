@@ -343,7 +343,7 @@ export default function DocumentEditor({ doc, onUpdate, onToggleVersions }) {
     onUpdate: ({ editor }) => {
       setContent(editor.getHTML());
     },
-  }, [doc.id]); // re-init if doc id changes
+  }, []); // Initialize once, manage content updates via useEffect
 
   // Update state when active doc changes
   useEffect(() => {
@@ -351,10 +351,10 @@ export default function DocumentEditor({ doc, onUpdate, onToggleVersions }) {
     setContent(doc.content);
     setDocType(doc.doc_type);
     setLastSaved(doc.updated_at);
-    if (editor && doc.doc_type !== 'csv' && editor.getHTML() !== doc.content) {
+    if (editor && !editor.isDestroyed && doc.doc_type !== 'csv' && editor.getHTML() !== doc.content) {
       editor.commands.setContent(DOMPurify.sanitize(doc.content));
     }
-  }, [doc.id]);
+  }, [doc.id, editor]);
 
   // Debounced auto-save (2 seconds)
   useEffect(() => {
