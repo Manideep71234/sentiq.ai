@@ -163,6 +163,8 @@ def delete_document(doc_id: int, user: User = Depends(get_current_user), db: Ses
     for v in versions:
         db.delete(v)
         
+    db.commit() # Commit versions delete first to satisfy FK constraint
+    
     db.delete(doc)
     db.commit()
     return {"status": "success"}
