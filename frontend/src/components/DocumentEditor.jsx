@@ -321,7 +321,7 @@ export default function DocumentEditor({ doc, onUpdate, onToggleVersions }) {
     }
   }, [doc.id, content, title, docType, onUpdate]);
 
-  // Setup TipTap
+  // Initialize once, manage content updates via useEffect
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -343,9 +343,19 @@ export default function DocumentEditor({ doc, onUpdate, onToggleVersions }) {
     onUpdate: ({ editor }) => {
       setContent(editor.getHTML());
     },
-  }, []); // Initialize once, manage content updates via useEffect
+  }, []); 
 
-  // removed doc.id useEffect sync as DocumentManager now uses key={activeDoc.id}
+  // Sync external changes (like SSE streaming) into the editor
+  useEffect(() => {
+    if (editor && !editor.isDestroyed && doc.content !== content) {
+      // Only set content if it's genuinely different to avoid cursor jumps while typing
+      const sanitized = DOMPurify.sanitize(doc.content);
+      if (editor.getHTML() !== sanitized) {
+        editor.commands.setContent(sanitized, false, { preserveWhitespace: 'full' });
+        setContent(sanitized);
+      }
+    }
+  }, [doc.content, editor, content]);
 
   // Debounced auto-save (2 seconds)
   useEffect(() => {

@@ -56,10 +56,30 @@ async def generate_document(req: GenerateDocumentRequest, user: User = Depends(g
         {"role": "user", "content": req.prompt}
     ]
     
+    # Generate a relevant title first
+    title = "Generated Document"
+    try:
+        title_messages = [
+            {"role": "system", "content": "You are a title generator. Generate a short, 3-5 word title for a document about the following topic. Output ONLY the title, no quotes, no formatting."},
+            {"role": "user", "content": req.prompt}
+        ]
+        generated_title = ""
+        async for chunk in provider.generate_stream(title_messages, model=req.model):
+            if chunk.get("type") == "content":
+                generated_title += chunk.get("delta", "")
+        
+        cleaned_title = generated_title.strip().replace('"', '').replace('*', '').replace('#', '')
+        if cleaned_title:
+            title = cleaned_title
+    except Exception as e:
+        import logging
+        logging.error(f"Title generation failed: {e}")
+        pass
+    
     # Create empty doc first
     new_doc = Document(
         user_id=user.id,
-        title="Generated Document",
+        title=title,
         doc_type="html",
         content=""
     )

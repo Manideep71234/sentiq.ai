@@ -188,7 +188,11 @@ export default function DocumentManager({ user }) {
     if (!window.confirm("Are you sure you want to delete this document?")) return;
     
     try {
-      await fetch(`/documents/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/documents/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || 'Failed to delete');
+      }
       setDocuments(prev => prev.filter(d => d.id !== id));
       if (activeDoc?.id === id) {
         setActiveDoc(null);
@@ -196,6 +200,7 @@ export default function DocumentManager({ user }) {
       }
     } catch (e) {
       console.error(e);
+      alert("Error deleting document: " + e.message);
     }
   };
 
