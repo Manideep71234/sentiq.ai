@@ -56,42 +56,55 @@ async def generate_document(req: GenerateDocumentRequest, user: User = Depends(g
         {"role": "user", "content": req.prompt}
     ]
     
-    full_content = ""
-    try:
-        async for chunk in provider.generate_stream(messages, model=req.model):
-            if chunk.get("type") == "content":
-                full_content += chunk.get("delta", "")
-            elif "error" in chunk:
-                if not full_content:
-                    raise Exception(chunk.get("error"))
-                break
-                
-        # Clean up any markdown blocks if the model ignored instructions
-        content = full_content.strip()
-        if content.startswith("```html"):
-            content = content[7:]
-        elif content.startswith("```"):
-            content = content[3:]
-        if content.endswith("```"):
-            content = content[:-3]
-        content = content.strip()
+    # Create empty doc first
+    new_doc = Document(
+        user_id=user.id,
+        title="Generated Document",
+        doc_type="html",
+        content=""
+    )
+    db.add(new_doc)
+    db.commit()
+    db.refresh(new_doc)
+    doc_id = new_doc.id
+
+    async def stream_generator():
+        # First chunk sends the doc ID
+        yield f"data: {json.dumps({'type': 'doc_id', 'id': doc_id, 'title': new_doc.title, 'doc_type': new_doc.doc_type, 'content': new_doc.content})}\n\n"
         
-        new_doc = Document(
-            user_id=user.id,
-            title="Generated Document",
-            doc_type="html",
-            content=content
-        )
-        db.add(new_doc)
-        db.commit()
-        db.refresh(new_doc)
-        create_snapshot_if_needed(db, new_doc, force=True)
-        
-        return new_doc
-    except Exception as e:
-        import logging
-        logging.error(f"Error generating document: {e}")
-        raise HTTPException(status_code=500, detail=f"Generation failed: {str(e)}")
+        full_content = ""
+        try:
+            async for chunk in provider.generate_stream(messages, model=req.model):
+                if chunk.get("type") == "content":
+                    delta = chunk.get("delta", "")
+                    full_content += delta
+                    yield f"data: {json.dumps({'type': 'content', 'delta': delta})}\n\n"
+                elif "error" in chunk:
+                    yield f"data: {json.dumps({'type': 'error', 'error': chunk.get('error')})}\n\n"
+                    break
+                    
+            content = full_content.strip()
+            if content.startswith("```html"): content = content[7:]
+            elif content.startswith("```"): content = content[3:]
+            if content.endswith("```"): content = content[:-3]
+            content = content.strip()
+            
+            from core.database import engine
+            with Session(engine) as session:
+                final_doc = session.exec(select(Document).where(Document.id == doc_id)).first()
+                if final_doc:
+                    final_doc.content = content
+                    session.commit()
+                    create_snapshot_if_needed(session, final_doc, force=True)
+                    
+            yield f"data: {json.dumps({'type': 'done'})}\n\n"
+        except Exception as e:
+            import logging
+            logging.error(f"Error generating document: {e}")
+            yield f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n"
+            
+    from fastapi.responses import StreamingResponse
+    return StreamingResponse(stream_generator(), media_type="text/event-stream")
 
 @router.get("/{doc_id}")
 def get_document(doc_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_session)):

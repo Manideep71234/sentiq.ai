@@ -116,22 +116,71 @@ export default function DocumentManager({ user }) {
   };
   
   const createAIDocument = async (promptText) => {
-    const res = await fetch('/documents/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: promptText })
-    });
-    
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || 'Failed to generate document');
+    try {
+      const res = await fetch('/documents/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: promptText })
+      });
+      
+      if (!res.ok) {
+        let err;
+        try {
+          err = await res.json();
+        } catch {
+          err = { detail: 'Failed to generate document. Server may have timed out.' };
+        }
+        throw new Error(err.detail || 'Failed to generate document');
+      }
+      
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let currentDoc = null;
+      let accumulatedContent = "";
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n');
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const dataStr = line.slice(6).trim();
+            if (!dataStr) continue;
+            
+            let data;
+            try {
+              data = JSON.parse(dataStr);
+            } catch(e) {
+              console.error("Error parsing stream JSON", dataStr, e);
+              continue;
+            }
+            
+            if (data.type === 'doc_id') {
+              currentDoc = { id: data.id, title: data.title, doc_type: data.doc_type, content: data.content };
+              setDocuments(prev => [currentDoc, ...prev]);
+              setActiveDoc(currentDoc);
+              setIsModalOpen(false); // Close modal so user can see it generating
+            } else if (data.type === 'content') {
+              accumulatedContent += data.delta;
+              if (currentDoc) {
+                const updated = { ...currentDoc, content: accumulatedContent };
+                currentDoc = updated;
+                setActiveDoc(updated);
+              }
+            } else if (data.type === 'error') {
+              throw new Error(data.error);
+            } else if (data.type === 'done') {
+              fetchDocuments(); // refresh list in background
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      throw e; // Rethrow so modal can catch it if it's still open
     }
-    
-    const newDoc = await res.json();
-    setDocuments(prev => [newDoc, ...prev]);
-    setActiveDoc(newDoc);
-    setShowVersions(false);
-    setIsModalOpen(false);
   };
 
   const deleteDocument = async (id, e) => {
