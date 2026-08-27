@@ -131,6 +131,30 @@ def fetch_inbox(host, port, username, password, access_token=None, limit=50):
         sorted_threads = sorted(threads.values(), key=lambda t: t['date'] or "", reverse=True)
         return sorted_threads
 
+def search_inbox(host, port, username, password, query, access_token=None, limit=10):
+    with imapclient.IMAPClient(host, port=port, ssl=True) as server:
+        if access_token:
+            auth_string = f"user={username}\1auth=Bearer {access_token}\1\1"
+            server.authenticate('XOAUTH2', lambda x: auth_string.encode())
+        else:
+            server.login(username, password)
+        server.select_folder('INBOX', readonly=True)
+        
+        # Simple text search on subject and body
+        messages = server.search(['OR', 'SUBJECT', query, 'BODY', query])
+        messages = messages[-limit:]
+        
+        if not messages:
+            return []
+            
+        fetch_data = server.fetch(messages, ['ENVELOPE', 'BODY[]'])
+        
+        parsed_messages = []
+        for msg_id, data in fetch_data.items():
+            parsed_messages.append(_parse_message(data, msg_id))
+            
+        return parsed_messages
+
 def send_email(host, port, username, password, to_addr, subject, body, in_reply_to=None, access_token=None):
     msg = EmailMessage()
     msg.set_content(body)

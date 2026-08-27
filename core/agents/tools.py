@@ -113,6 +113,124 @@ def read_url(url: str) -> str:
     except Exception as e:
         return f"Error reading URL: {str(e)}"
 
+def agent_search_documents(user_id: int, db: Session, query: str) -> str:
+    from core.models import Document
+    from sqlmodel import select
+    docs = db.exec(
+        select(Document).where(
+            Document.user_id == user_id,
+            (Document.title.icontains(query) | Document.content.icontains(query))
+        ).limit(5)
+    ).all()
+    if not docs:
+        return "No documents found matching that query."
+    
+    res = [f"Found {len(docs)} documents:"]
+    for d in docs:
+        snippet = d.content[:150].replace('\n', ' ') + '...' if d.content else ""
+        res.append(f"- ID: {d.id} | Title: {d.title} | Type: {d.doc_type} | Snippet: {snippet}")
+    return "\n".join(res)
+
+def agent_read_document(user_id: int, db: Session, doc_id: int) -> str:
+    from core.models import Document
+    from sqlmodel import select
+    doc = db.exec(select(Document).where(Document.id == doc_id, Document.user_id == user_id)).first()
+    if not doc:
+        return f"Error: Document with ID {doc_id} not found or you don't have access."
+    return f"Title: {doc.title}\n\nContent:\n{doc.content}"
+
+def agent_search_memory(user_id: int, db: Session, query: str) -> str:
+    from core.models import MemoryEntry
+    from sqlmodel import select
+    memories = db.exec(
+        select(MemoryEntry).where(
+            MemoryEntry.user_id == user_id,
+            MemoryEntry.content.icontains(query)
+        ).limit(10)
+    ).all()
+    if not memories:
+        return "No specific memories found matching that query."
+    
+    return "Found these memories:\n" + "\n".join([f"- {m.content}" for m in memories])
+
+def agent_fetch_recent_emails(user_id: int, db: Session, limit: int = 10) -> str:
+    from core.models import EmailAccount
+    from sqlmodel import select
+    from core.security import decrypt_string
+    from core.integrations.email_client import fetch_inbox
+    
+    account = db.exec(select(EmailAccount).where(EmailAccount.user_id == user_id)).first()
+    if not account:
+        return "Error: User has not connected an Email account yet. Instruct them to connect it in the Email tab."
+        
+    try:
+        password = decrypt_string(account.encrypted_password) if account.encrypted_password else None
+        threads = fetch_inbox(
+            host=account.imap_host,
+            port=account.imap_port,
+            username=account.username,
+            password=password,
+            access_token=account.access_token,
+            limit=limit
+        )
+        if not threads:
+            return "Inbox is empty or no recent emails found."
+            
+        res = [f"Found {len(threads)} recent email threads:"]
+        for t in threads:
+            res.append(f"- Thread ID: {t['thread_id']}\n  From: {t['sender']}\n  Subject: {t['subject']}\n  Date: {t['date']}\n  Snippet: {t['snippet']}\n")
+        return "\n".join(res)
+    except Exception as e:
+        return f"Error fetching emails: {str(e)}"
+
+def agent_search_emails(user_id: int, db: Session, query: str) -> str:
+    from core.models import EmailAccount
+    from sqlmodel import select
+    from core.security import decrypt_string
+    from core.integrations.email_client import search_inbox
+    
+    account = db.exec(select(EmailAccount).where(EmailAccount.user_id == user_id)).first()
+    if not account:
+        return "Error: User has not connected an Email account yet. Instruct them to connect it in the Email tab."
+        
+    try:
+        password = decrypt_string(account.encrypted_password) if account.encrypted_password else None
+        messages = search_inbox(
+            host=account.imap_host,
+            port=account.imap_port,
+            username=account.username,
+            password=password,
+            query=query,
+            access_token=account.access_token,
+            limit=10
+        )
+        if not messages:
+            return "No emails found matching that query."
+            
+        res = [f"Found {len(messages)} matching emails:"]
+        for m in messages:
+            res.append(f"- From: {m['sender']}\n  Subject: {m['subject']}\n  Date: {m['date']}\n  Snippet: {m['snippet']}\n")
+        return "\n".join(res)
+    except Exception as e:
+        return f"Error searching emails: {str(e)}"
+
+def agent_get_recent_actions(user_id: int, db: Session, limit: int = 15) -> str:
+    from core.models import UsageLog, ChatMessage
+    from sqlmodel import select
+    
+    logs = db.exec(
+        select(UsageLog).where(UsageLog.user_id == user_id).order_by(UsageLog.created_at.desc()).limit(limit)
+    ).all()
+    
+    if not logs:
+        return "No recent AI actions found."
+        
+    res = [f"Found {len(logs)} recent AI interactions:"]
+    for idx, log in enumerate(logs):
+        res.append(f"{idx+1}. Model: {log.model_name}, Prompt Tokens: {log.prompt_tokens}, Date: {log.created_at}")
+        
+    return "\n".join(res)
+
 def agent_create_calendar_event(user_id: int, db: Session, start_date_iso: str, end_date_iso: str, summary: str, description: str = "") -> str:
     from core.models import CalendarAccount
     from sqlmodel import select
@@ -222,6 +340,90 @@ BUILTIN_TOOLS = [
                 "required": ["start_date_iso", "end_date_iso", "summary"]
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_documents",
+            "description": "Search the user's Sentiq.AI documents by title or content keyword.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Keyword to search for in documents"}
+                },
+                "required": ["query"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_memory",
+            "description": "Search the user's long-term memory for specific keywords if the system prompt doesn't contain enough detail.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Keyword to search for in memory"}
+                },
+                "required": ["query"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "read_document",
+            "description": "Read the full content of a specific Sentiq.AI document.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "doc_id": {"type": "integer", "description": "The ID of the document to read"}
+                },
+                "required": ["doc_id"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "fetch_recent_emails",
+            "description": "Fetch the user's most recent email threads from their connected inbox.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "limit": {"type": "integer", "description": "Maximum number of recent emails to fetch (default 10, max 20)"}
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_emails",
+            "description": "Search the user's email inbox for specific keywords or topics.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Keyword or topic to search for in emails"}
+                },
+                "required": ["query"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_recent_actions",
+            "description": "Get a log of the AI's recent actions and interactions with the user.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "limit": {"type": "integer", "description": "Number of logs to fetch (default 15)"}
+                },
+                "required": []
+            }
+        }
     }
 ]
 import time
@@ -234,6 +436,18 @@ def execute_tool(name: str, arguments: dict, user_id: int, db: Session) -> str:
         return write_file(arguments.get("path", ""), arguments.get("content", ""))
     elif name == "save_memory":
         return save_memory(user_id, db, arguments.get("content", ""))
+    elif name == "search_memory":
+        return agent_search_memory(user_id, db, arguments.get("query", ""))
+    elif name == "search_documents":
+        return agent_search_documents(user_id, db, arguments.get("query", ""))
+    elif name == "read_document":
+        return agent_read_document(user_id, db, arguments.get("doc_id", 0))
+    elif name == "fetch_recent_emails":
+        return agent_fetch_recent_emails(user_id, db, arguments.get("limit", 10))
+    elif name == "search_emails":
+        return agent_search_emails(user_id, db, arguments.get("query", ""))
+    elif name == "get_recent_actions":
+        return agent_get_recent_actions(user_id, db, arguments.get("limit", 15))
     elif name == "web_search":
         now = time.time()
         user_searches = search_rate_limits.get(user_id, [])
