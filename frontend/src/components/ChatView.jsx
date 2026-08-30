@@ -540,7 +540,7 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
     });
 
     // Configure DOMPurify to allow iframes for Google Maps
-    const sanitizedHTML = DOMPurify.sanitize(marked.parse(processed), {
+    const sanitizedHTML = DOMPurify.sanitize(marked.parse(processed, { breaks: true, gfm: true }), {
       ADD_TAGS: ['iframe'],
       ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'marginheight', 'marginwidth']
     });
