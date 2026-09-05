@@ -54,7 +54,7 @@ function App() {
     return hash || 'chat';
   });
   const [user, setUser] = useState({ username: 'Loading...' });
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [showStartup, setShowStartup] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
