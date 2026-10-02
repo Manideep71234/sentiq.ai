@@ -1,20 +1,12 @@
 ﻿---
 title: Rumii AI
-emoji: ??
-colorFrom: indigo
-colorTo: purple
+emoji: 🤖
+colorFrom: black
+colorTo: gray
 sdk: docker
 app_port: 7860
 pinned: true
 ---
 
-# Rumii.AI
-
-A full-stack AI assistant with chat, documents, email, and research capabilities.
-
-## Features
-- ?? Multi-provider AI chat (OpenRouter, Groq, Gemini)
-- ?? AI-powered document editor
-- ?? Research assistant
-- ?? Email integration
-- ?? Secure authentication with passkeys
+# Rumii.AI Backend
+Full-stack AI assistant — FastAPI backend serving the Rumii.AI frontend.
