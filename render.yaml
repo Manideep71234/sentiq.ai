@@ -1,6 +1,6 @@
-services:
+﻿services:
   - type: web
-    name: sentiq-ai-backend
+    name: rumii-ai-backend
     runtime: docker
     plan: free
     dockerfilePath: ./Dockerfile
@@ -29,4 +29,4 @@ services:
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
         value: "43200"
       - key: ALLOWED_ORIGINS
-        value: "https://sentiq-ai.vercel.app,http://localhost:5173"
+        value: "https://rumii-ai.vercel.app,http://localhost:5173"

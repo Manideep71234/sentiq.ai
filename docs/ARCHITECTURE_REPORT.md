@@ -1,8 +1,8 @@
-# Sentiq.AI Architecture Report
+﻿# Rumii.AI Architecture Report
 
 ## 1. Executive Summary
 
-Sentiq.AI is a self-hosted, all-in-one AI productivity workspace designed for solo developers and small teams. It unifies intelligent chat, autonomous agent workflows, document editing, email, notes, and calendar into a single, locally deployed dashboard. The application is built on a containerized FastAPI backend, uses a local SQLite database (SQLModel) to maintain self-hostability on free-tier infrastructure, and serves a lightweight vanilla HTML/CSS/JS frontend. Currently, **Phase 1 (Foundation)** and **Phase 2 (Chat + Agents)** are fully completed, establishing the core infrastructure, authentication, provider abstractions, WebSocket streaming chat, and Model Context Protocol (MCP) tool calling.
+Rumii.AI is a self-hosted, all-in-one AI productivity workspace designed for solo developers and small teams. It unifies intelligent chat, autonomous agent workflows, document editing, email, notes, and calendar into a single, locally deployed dashboard. The application is built on a containerized FastAPI backend, uses a local SQLite database (SQLModel) to maintain self-hostability on free-tier infrastructure, and serves a lightweight vanilla HTML/CSS/JS frontend. Currently, **Phase 1 (Foundation)** and **Phase 2 (Chat + Agents)** are fully completed, establishing the core infrastructure, authentication, provider abstractions, WebSocket streaming chat, and Model Context Protocol (MCP) tool calling.
 
 ## 2. System Architecture
 
@@ -18,7 +18,7 @@ flowchart TD
         Agent[Agent Orchestrator]
         MCPClient[MCP Client]
         Tools[Built-in Tools]
-        DB[(SQLite / sentiq.db)]
+        DB[(SQLite / Rumii.db)]
         
         FastAPI --> Agent
         Agent --> Tools
@@ -237,7 +237,7 @@ erDiagram
   1. Base Python image is pulled, `workspace` directory is created, and dependencies are installed via `pip`.
   2. Source code is copied into `/app`.
   3. Uvicorn starts the FastAPI server.
-  4. FastAPI `lifespan` triggers: SQLModel auto-creates the SQLite file (`sentiq.db`) and tables if missing.
+  4. FastAPI `lifespan` triggers: SQLModel auto-creates the SQLite file (`Rumii.db`) and tables if missing.
   5. The lifespan function searches for a user named `admin`. Finding none on first run, it generates a random password, hashes it, saves the admin user, and logs the plaintext password to standard output (`docker compose logs app`).
   6. The application binds to port `8000`.
 

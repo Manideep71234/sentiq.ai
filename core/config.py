@@ -1,10 +1,10 @@
-import os
+﻿import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     SECRET_KEY: str = os.getenv("SECRET_KEY", "replace_this_with_a_secure_key_in_production")
     ENCRYPTION_KEY: str = os.getenv("ENCRYPTION_KEY", "12345678901234567890123456789012") # Must be 32 bytes
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///sentiq.db")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///Rumii.db")
     
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
     OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")

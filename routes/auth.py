@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
+﻿from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from sqlmodel import Session, select
 from datetime import datetime, timedelta, timezone
 from pydantic import BaseModel
@@ -146,7 +146,7 @@ class ForgotPasswordRequest(BaseModel):
 @limiter.limit("3/minute")
 def forgot_password(request: Request, data: ForgotPasswordRequest, db: Session = Depends(get_session)):
     import logging
-    logger = logging.getLogger("sentiq.auth")
+    logger = logging.getLogger("Rumii.auth")
     
     # Check username or email
     user = db.exec(select(User).where((User.username == data.identifier) | (User.email == data.identifier))).first()
@@ -263,7 +263,7 @@ import uuid
 webauthn_challenges = {}
 
 RP_ID = "localhost"
-RP_NAME = "Sentiq.AI"
+RP_NAME = "Rumii.AI"
 ORIGIN = "http://127.0.0.1:8000"
 
 @router.get("/webauthn/register/options")
@@ -396,7 +396,7 @@ import json
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
-GOOGLE_REDIRECT_URI = os.environ.get('GOOGLE_REDIRECT_URI', 'https://sentiq-ai.vercel.app/auth/google/callback')
+GOOGLE_REDIRECT_URI = os.environ.get('GOOGLE_REDIRECT_URI', 'https://rumii-ai.vercel.app/auth/google/callback')
 
 @router.get('/google/login')
 def google_login():

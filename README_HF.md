@@ -1,5 +1,5 @@
----
-title: Sentiq AI
+﻿---
+title: Rumii AI
 emoji: ??
 colorFrom: indigo
 colorTo: purple
@@ -8,7 +8,7 @@ app_port: 7860
 pinned: true
 ---
 
-# Sentiq.AI
+# Rumii.AI
 
 A full-stack AI assistant with chat, documents, email, and research capabilities.
 

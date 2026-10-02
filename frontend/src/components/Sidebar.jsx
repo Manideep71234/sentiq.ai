@@ -79,7 +79,9 @@ export default function Sidebar({ activeView, setActiveView, user, toggleTheme, 
       <aside className={`sidebar ${isOpen ? 'open' : ''} ${isCollapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span>Sentiq<span style={{ color: 'var(--accent-color)' }}>.AI</span></span>
+            <span className="font-minecraft" style={{ fontSize: '0.7rem', letterSpacing: '0.1em' }}>
+              Rumii<span style={{ color: 'var(--sidebar-accent, #fff)', opacity: 0.7 }}>.AI</span>
+            </span>
           </div>
           <div style={{ display: 'flex', gap: '0.25rem' }}>
             <button className="theme-toggle" onClick={() => setActiveView('api-keys')} title="API Keys" style={isCollapsed ? { display: 'none' } : {}}>

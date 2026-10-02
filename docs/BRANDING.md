@@ -1,8 +1,8 @@
-# Sentiq Brand Guidelines
+﻿# Rumii Brand Guidelines
 
-This document outlines the design tokens, colors, fonts, and usage rules for both Sentiq brands.
+This document outlines the design tokens, colors, fonts, and usage rules for both Rumii brands.
 
-## 1. Sentiq.AI
+## 1. Rumii.AI
 The core product brand—a self-hosted AI workspace.
 
 **Icon Concept:** Connected-nodes S-curve mark
@@ -14,7 +14,7 @@ The core product brand—a self-hosted AI workspace.
 - Text (Light mode): Slate 900 (`#0F172A`)
 - Text (Dark mode): Slate 50 (`#F8FAFC`)
 
-## 2. Sentiq Labs
+## 2. Rumii Labs
 The parent business brand—voice agents and AI automation services.
 
 **Icon Concept:** Paired hexagon + waveform mark

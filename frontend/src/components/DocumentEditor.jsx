@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+﻿import { useState, useEffect, useRef, useCallback } from 'react';
 import DOMPurify from 'dompurify';
 import { 
   Clock, Save, FileSpreadsheet, Search, Bold, Italic, Underline as UnderlineIcon, 
@@ -163,7 +163,7 @@ function AIAssistantPanel({ editor, docId, onClose }) {
       if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         return `ws://${window.location.host}`;
       }
-      return 'wss://sentiqai-production.up.railway.app';
+      return 'wss://RumiiAI-production.up.railway.app';
     };
 
     const wsUrl = `${getWsBaseUrl()}/documents/ws/${docId}?token=${window.wsToken || ''}`;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 
 export default function ResetPasswordView() {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
@@ -68,7 +68,7 @@ export default function ResetPasswordView() {
         textAlign: 'center'
       }}>
         <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
-          Sentiq<span style={{ color: 'var(--accent-color)' }}>.AI</span>
+          Rumii<span style={{ color: 'var(--accent-color)' }}>.AI</span>
         </h1>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '30px' }}>
           Enter your new password below.

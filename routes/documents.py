@@ -1,4 +1,4 @@
-import json
+﻿import json
 from datetime import datetime, timezone
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException, status
 from sqlmodel import Session, select
@@ -222,7 +222,7 @@ async def websocket_ai_edit(websocket: WebSocket, doc_id: int):
     await websocket.accept()
     
     import os
-    allowed_origins = os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173,https://sentiq-ai.vercel.app").split(",")
+    allowed_origins = os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173,https://rumii-ai.vercel.app").split(",")
     origin = websocket.headers.get("origin")
     if origin:
         is_allowed = any(origin.strip() == o.strip() for o in allowed_origins) or origin.endswith(".vercel.app") or origin.startswith("http://localhost:")

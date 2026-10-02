@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Volume2, Image as ImageIcon, Download, Play, Loader2 } from 'lucide-react';
 
 export default function StudioView() {
@@ -82,7 +82,7 @@ export default function StudioView() {
       const a = document.createElement('a');
       a.style.display = 'none';
       a.href = url;
-      a.download = `sentiq_image_${Date.now()}.jpg`;
+      a.download = `Rumii_image_${Date.now()}.jpg`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);

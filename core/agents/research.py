@@ -1,4 +1,4 @@
-import json
+﻿import json
 from typing import AsyncGenerator, Dict, Any, List
 from sqlmodel import Session, select
 from core.providers import get_provider
@@ -19,7 +19,7 @@ async def run_research_loop(
     
     # 1. System Prompt for Deep Research
     system_prompt = (
-        "You are Sentiq.AI Deep Research Agent.\n"
+        "You are Rumii.AI Deep Research Agent.\n"
         "Your goal is to quickly and thoroughly research the user's query using the web_search and read_url tools.\n"
         "CRITICAL RULES:\n"
         "1. DO NOT copy-paste long excerpts from websites. You must think independently, synthesize information in your own words, and provide actionable insights.\n"

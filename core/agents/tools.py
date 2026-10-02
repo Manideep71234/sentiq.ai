@@ -1,7 +1,7 @@
-"""
+﻿"""
 DISCLAIMER: 
 Any shell execution tools or system-level command tools added to this file MUST BE strictly isolated and sandboxed. 
-Sentiq.AI is deployed in a live environment, and exposing unrestricted shell access to the LLM agent introduces severe security risks.
+Rumii.AI is deployed in a live environment, and exposing unrestricted shell access to the LLM agent introduces severe security risks.
 If shell tools are ever implemented, they must run inside a secure, ephemeral container or restricted sandbox, and NEVER directly on the host system.
 """
 import os
@@ -345,7 +345,7 @@ BUILTIN_TOOLS = [
         "type": "function",
         "function": {
             "name": "search_documents",
-            "description": "Search the user's Sentiq.AI documents by title or content keyword.",
+            "description": "Search the user's Rumii.AI documents by title or content keyword.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -373,7 +373,7 @@ BUILTIN_TOOLS = [
         "type": "function",
         "function": {
             "name": "read_document",
-            "description": "Read the full content of a specific Sentiq.AI document.",
+            "description": "Read the full content of a specific Rumii.AI document.",
             "parameters": {
                 "type": "object",
                 "properties": {

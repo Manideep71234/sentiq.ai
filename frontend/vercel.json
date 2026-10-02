@@ -1,16 +1,16 @@
-{
+﻿{
   "rewrites": [
-    { "source": "/auth/(.*)", "destination": "https://sentiqai-production.up.railway.app/auth/$1" },
-    { "source": "/system/(.*)", "destination": "https://sentiqai-production.up.railway.app/system/$1" },
-    { "source": "/chat/(.*)", "destination": "https://sentiqai-production.up.railway.app/chat/$1" },
-    { "source": "/documents/(.*)", "destination": "https://sentiqai-production.up.railway.app/documents/$1" },
-    { "source": "/email/(.*)", "destination": "https://sentiqai-production.up.railway.app/email/$1" },
-    { "source": "/calendar/(.*)", "destination": "https://sentiqai-production.up.railway.app/calendar/$1" },
-    { "source": "/notes/(.*)", "destination": "https://sentiqai-production.up.railway.app/notes/$1" },
-    { "source": "/tasks/(.*)", "destination": "https://sentiqai-production.up.railway.app/tasks/$1" },
-    { "source": "/scheduled-tasks/(.*)", "destination": "https://sentiqai-production.up.railway.app/scheduled-tasks/$1" },
-    { "source": "/settings/(.*)", "destination": "https://sentiqai-production.up.railway.app/settings/$1" },
-    { "source": "/login", "destination": "https://sentiqai-production.up.railway.app/login" },
+    { "source": "/auth/(.*)", "destination": "https://RumiiAI-production.up.railway.app/auth/$1" },
+    { "source": "/system/(.*)", "destination": "https://RumiiAI-production.up.railway.app/system/$1" },
+    { "source": "/chat/(.*)", "destination": "https://RumiiAI-production.up.railway.app/chat/$1" },
+    { "source": "/documents/(.*)", "destination": "https://RumiiAI-production.up.railway.app/documents/$1" },
+    { "source": "/email/(.*)", "destination": "https://RumiiAI-production.up.railway.app/email/$1" },
+    { "source": "/calendar/(.*)", "destination": "https://RumiiAI-production.up.railway.app/calendar/$1" },
+    { "source": "/notes/(.*)", "destination": "https://RumiiAI-production.up.railway.app/notes/$1" },
+    { "source": "/tasks/(.*)", "destination": "https://RumiiAI-production.up.railway.app/tasks/$1" },
+    { "source": "/scheduled-tasks/(.*)", "destination": "https://RumiiAI-production.up.railway.app/scheduled-tasks/$1" },
+    { "source": "/settings/(.*)", "destination": "https://RumiiAI-production.up.railway.app/settings/$1" },
+    { "source": "/login", "destination": "https://RumiiAI-production.up.railway.app/login" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

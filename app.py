@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
@@ -133,7 +133,7 @@ async def lifespan(app: FastAPI):
             
     yield
 
-app = FastAPI(lifespan=lifespan, title="Sentiq.AI")
+app = FastAPI(lifespan=lifespan, title="Rumii.AI")
 app.state.limiter = limiter
 
 # Exception handler for Rate Limits

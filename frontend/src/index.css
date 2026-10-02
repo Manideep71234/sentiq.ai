@@ -1,47 +1,66 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600&family=Outfit:wght@300;400;500;600&display=swap');
+
+/* ========== MINECRAFT FONT UTILITY ========== */
+.font-minecraft {
+  font-family: 'Press Start 2P', monospace;
+  letter-spacing: 0.05em;
+  line-height: 1.8;
+}
 
 :root {
-  /* Light Theme Defaults */
-  --bg-gradient: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
-  --panel-bg: rgba(255, 255, 255, 0.65);
-  --panel-border: rgba(255, 255, 255, 0.8);
-  --text-primary: #1e1e24;
-  --text-secondary: #5a5a65;
-  --accent-color: #6366f1;
-  --accent-hover: #4f46e5;
-  --sidebar-hover: rgba(255, 255, 255, 0.5);
-  --user-msg-bg: rgba(99, 102, 241, 0.1);
-  --system-msg-bg: rgba(255, 255, 255, 0.5);
-  --shadow-subtle: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
-  --radius-lg: 20px;
-  --radius-md: 10px;
-
+  /* Light Theme — Clean White & Black */
+  --bg-gradient: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+  --panel-bg: rgba(255, 255, 255, 0.95);
+  --panel-border: rgba(0, 0, 0, 0.12);
+  --text-primary: #0a0a0a;
+  --text-secondary: #4a4a4a;
+  --accent-color: #000000;
+  --accent-hover: #333333;
+  --sidebar-hover: rgba(0, 0, 0, 0.06);
+  --user-msg-bg: rgba(0, 0, 0, 0.05);
+  --system-msg-bg: rgba(255, 255, 255, 0.9);
+  --shadow-subtle: 0 4px 24px 0 rgba(0, 0, 0, 0.08);
+  --radius-lg: 16px;
+  --radius-md: 8px;
   --font-size-base: 0.95rem;
   --spacing-base: 0.75rem;
+  --mouse-glow: rgba(0, 0, 0, 0.15);
 
-  --mouse-glow: rgba(99, 102, 241, 0.4);
+  /* Sidebar specific */
+  --sidebar-bg: #0a0a0a;
+  --sidebar-text: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-item-hover: rgba(255, 255, 255, 0.08);
+  --sidebar-accent: #ffffff;
 }
 
 [data-theme="dark"] {
-  --bg-gradient: linear-gradient(135deg, #09090b 0%, #18181b 100%);
-  --panel-bg: rgba(24, 24, 27, 0.65);
-  --panel-border: rgba(255, 255, 255, 0.1);
-  --text-primary: #f4f4f5;
-  --text-secondary: #a1a1aa;
-  --accent-color: #818cf8;
-  --accent-hover: #a5b4fc;
-  --sidebar-hover: rgba(255, 255, 255, 0.05);
-  --user-msg-bg: rgba(129, 140, 248, 0.15);
-  --system-msg-bg: rgba(0, 0, 0, 0.2);
-  --shadow-subtle: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  /* Dark Theme — Deep Black */
+  --bg-gradient: linear-gradient(135deg, #0a0a0a 0%, #141414 100%);
+  --panel-bg: rgba(20, 20, 20, 0.95);
+  --panel-border: rgba(255, 255, 255, 0.08);
+  --text-primary: #f0f0f0;
+  --text-secondary: #888888;
+  --accent-color: #ffffff;
+  --accent-hover: #cccccc;
+  --sidebar-hover: rgba(255, 255, 255, 0.06);
+  --user-msg-bg: rgba(255, 255, 255, 0.07);
+  --system-msg-bg: rgba(0, 0, 0, 0.4);
+  --shadow-subtle: 0 4px 24px 0 rgba(0, 0, 0, 0.6);
+  --mouse-glow: rgba(255, 255, 255, 0.1);
 
-  --mouse-glow: rgba(129, 140, 248, 0.25);
+  /* Sidebar specific */
+  --sidebar-bg: #000000;
+  --sidebar-text: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-item-hover: rgba(255, 255, 255, 0.06);
+  --sidebar-accent: #ffffff;
 
   /* Animated Mesh Background Variables */
-  --mesh-color-1: rgba(17, 24, 39, 1);
-  --mesh-color-2: rgba(30, 27, 75, 1);
-  --mesh-color-3: rgba(15, 23, 42, 1);
-  --mesh-color-4: rgba(8, 14, 21, 1);
+  --mesh-color-1: rgba(10, 10, 10, 1);
+  --mesh-color-2: rgba(20, 20, 20, 1);
+  --mesh-color-3: rgba(5, 5, 5, 1);
+  --mesh-color-4: rgba(15, 15, 15, 1);
 }
 
 * {
@@ -266,19 +285,26 @@ h4 {
 .chat-header h2,
 .view-header h2 {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  font-family: 'Press Start 2P', monospace;
+  letter-spacing: 0.05em;
+  line-height: 1.8;
 }
 
-/* Sidebar */
+.sidebar-header {
+  font-family: 'Press Start 2P', monospace;
+}
+
+/* Sidebar — Always dark/black regardless of theme */
 .sidebar {
   width: 280px;
-  background: var(--panel-bg);
-  border-right: 1px solid var(--panel-border);
+  background: #0a0a0a;
+  border-right: 1px solid rgba(255,255,255,0.08);
   display: flex;
   flex-direction: column;
   padding: 1.5rem;
@@ -286,6 +312,7 @@ h4 {
   transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   position: relative;
+  color: #ffffff;
 }
 
 .sidebar nav::-webkit-scrollbar {

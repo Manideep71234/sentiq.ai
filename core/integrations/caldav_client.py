@@ -1,4 +1,4 @@
-import caldav
+﻿import caldav
 from datetime import datetime
 
 def get_caldav_client(url, username, password):
@@ -64,7 +64,7 @@ def create_event(url, username, password, start_date, end_date, summary, descrip
     
     vcal = f"""BEGIN:VCALENDAR
 VERSION:2.0
-PRODID:-//Sentiq.AI//CalDAV Client//EN
+PRODID:-//Rumii.AI//CalDAV Client//EN
 BEGIN:VEVENT
 SUMMARY:{summary}
 DESCRIPTION:{description}

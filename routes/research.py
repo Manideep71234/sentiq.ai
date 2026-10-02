@@ -1,4 +1,4 @@
-import json
+﻿import json
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from sqlmodel import Session, select
 from core.database import get_session
@@ -21,7 +21,7 @@ async def websocket_research(websocket: WebSocket):
     
     import os
     from fastapi import status
-    allowed_origins = os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173,https://sentiq-ai.vercel.app").split(",")
+    allowed_origins = os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173,https://rumii-ai.vercel.app").split(",")
     origin = websocket.headers.get("origin")
     if origin:
         is_allowed = any(origin.strip() == o.strip() for o in allowed_origins) or origin.endswith(".vercel.app") or origin.startswith("http://localhost:")

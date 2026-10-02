@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+﻿from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from pydantic import BaseModel
 from typing import Optional
@@ -185,13 +185,13 @@ def export_user_data(user: User = Depends(get_current_user), db: Session = Depen
     json_str = json.dumps(data, indent=2)
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
-        zip_file.writestr("sentiq_export.json", json_str)
+        zip_file.writestr("Rumii_export.json", json_str)
         
     zip_buffer.seek(0)
     return StreamingResponse(
         zip_buffer,
         media_type="application/zip",
-        headers={"Content-Disposition": f"attachment; filename=sentiq_export_{user.username}.zip"}
+        headers={"Content-Disposition": f"attachment; filename=Rumii_export_{user.username}.zip"}
     )
 
 @router.delete("/account")

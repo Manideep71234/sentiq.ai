@@ -1,4 +1,4 @@
-import json
+﻿import json
 import time
 import logging
 import asyncio
@@ -51,7 +51,7 @@ async def run_agent_loop(
 
     # 2. Build system prompt
     
-    system_prompt = "You are Sentiq.AI, an advanced intelligent agent.\n"
+    system_prompt = "You are Rumii.AI, an advanced intelligent agent.\n"
     system_prompt += "CRITICAL INSTRUCTIONS:\n"
     
     if all_tools:

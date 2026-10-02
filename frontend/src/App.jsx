@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Menu, Wand2, MessageSquare } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import MouseTracker from './components/MouseTracker';
@@ -24,7 +24,7 @@ function LogoutView() {
       <div className="app-container fade-in" style={{ maxWidth: '500px', height: 'auto', padding: '40px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
         <svg className="handwriting-svg" viewBox="0 0 400 100" style={{ width: '200px', height: 'auto', marginBottom: '10px' }}>
           <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="handwriting-text">
-            Sentiq.AI
+            Rumii.AI
           </text>
         </svg>
         <h2 style={{ color: 'var(--text-primary)', marginBottom: '10px' }}>Thanks for using our AI!</h2>
@@ -142,7 +142,7 @@ function App() {
         <div className={`startup-overlay ${!showStartup ? 'fade-out' : ''}`}>
           <svg className="handwriting-svg" viewBox="0 0 400 100">
             <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="handwriting-text">
-              Sentiq.AI
+              Rumii.AI
             </text>
           </svg>
         </div>

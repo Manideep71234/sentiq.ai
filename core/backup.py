@@ -1,11 +1,11 @@
-import os
+﻿import os
 import shutil
 import logging
 import datetime
 import glob
 from core.config import settings
 
-logger = logging.getLogger("sentiq.backup")
+logger = logging.getLogger("Rumii.backup")
 
 def perform_db_backup():
     """

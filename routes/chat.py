@@ -1,4 +1,4 @@
-import json
+﻿import json
 import time
 import asyncio
 from datetime import datetime, timezone
@@ -243,7 +243,7 @@ async def websocket_chat(websocket: WebSocket, session_id: int):
     print(f"DEBUG: Accepted websocket connection for session {session_id}")
     
     import os
-    allowed_origins = os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173,https://sentiq-ai.vercel.app").split(",")
+    allowed_origins = os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173,https://rumii-ai.vercel.app").split(",")
     origin = websocket.headers.get("origin")
     if origin:
         is_allowed = any(origin.strip() == o.strip() for o in allowed_origins) or origin.endswith(".vercel.app") or origin.startswith("http://localhost:")

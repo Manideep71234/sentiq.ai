@@ -1,5 +1,5 @@
-{
-  "name": "sentiq-ai",
+﻿{
+  "name": "rumii-ai",
   "version": "1.0.0",
   "description": "Root package.json to forward commands to the frontend directory",
   "scripts": {

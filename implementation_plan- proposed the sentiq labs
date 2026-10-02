@@ -1,12 +1,12 @@
-# Google OAuth2 Integration & Deployment Architecture
+﻿# Google OAuth2 Integration & Deployment Architecture
 
 To make connecting to email as simple as possible (and avoid App Passwords entirely), we will implement a "Sign in with Google" (OAuth2) flow for the Email section. 
 
-Since you mentioned you want to host this on **GitHub Pages** for your AI business (Sentiq Labs), there is an important architectural requirement to understand: **GitHub Pages can only host static websites (HTML/CSS/JS)**. It cannot run the Python/FastAPI backend, connect to databases (SQLite), or run the AI agent loop.
+Since you mentioned you want to host this on **GitHub Pages** for your AI business (Rumii Labs), there is an important architectural requirement to understand: **GitHub Pages can only host static websites (HTML/CSS/JS)**. It cannot run the Python/FastAPI backend, connect to databases (SQLite), or run the AI agent loop.
 
-## The Architecture for Sentiq Labs
+## The Architecture for Rumii Labs
 To achieve your goal of hosting the UI on GitHub pages while keeping the agent functional for everything:
-1. **Frontend (GitHub Pages):** We will eventually configure the React app to build statically and deploy to your GitHub Pages URL (e.g., `sentiqlabs.github.io`).
+1. **Frontend (GitHub Pages):** We will eventually configure the React app to build statically and deploy to your GitHub Pages URL (e.g., `Rumiilabs.github.io`).
 2. **Backend (PaaS):** The Python backend (which runs the AI Agent, connects to IMAP, and stores data) will need to be deployed to a backend hosting provider like Render, Railway, or Heroku. The GitHub Pages frontend will be configured to talk to this backend via API calls.
 
 ## Proposed Changes (OAuth2 Implementation)
@@ -25,10 +25,10 @@ We will implement the OAuth2 flow so users can securely connect their Gmail with
 
 > [!WARNING]
 > **Google Cloud Setup Required**
-> To make "Sign in with Google" work, you (as the developer of Sentiq Labs) will need to go to the [Google Cloud Console](https://console.cloud.google.com/), create a project, configure the OAuth Consent Screen, and generate a **Client ID** and **Client Secret**. 
+> To make "Sign in with Google" work, you (as the developer of Rumii Labs) will need to go to the [Google Cloud Console](https://console.cloud.google.com/), create a project, configure the OAuth Consent Screen, and generate a **Client ID** and **Client Secret**. 
 > You will then need to put these credentials into a `.env` file on your backend server. The app cannot do this automatically.
 
 ## Open Questions
 
-1. **Are you comfortable setting up a Google Cloud Developer Project** to get the OAuth credentials for your Sentiq Labs app?
+1. **Are you comfortable setting up a Google Cloud Developer Project** to get the OAuth credentials for your Rumii Labs app?
 2. **Do you still want to support basic IMAP/SMTP passwords for non-Google emails (like Outlook/iCloud), or should we completely replace the form with just a "Sign in with Google" button?**

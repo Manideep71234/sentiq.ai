@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { Send, Square, Paperclip, X, Loader2, Mic, MicOff } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
@@ -289,7 +289,7 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
       if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         return `ws://${window.location.host}`;
       }
-      return 'wss://sentiqai-production.up.railway.app';
+      return 'wss://RumiiAI-production.up.railway.app';
     };
 
     const targetSessionId = activeSessionId || sessionId;
@@ -597,7 +597,7 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
         {messages.length === 0 && (
           <div className="message system-message" style={{ textAlign: 'center', marginTop: 'auto', marginBottom: '1rem', color: 'var(--text-secondary)' }}>
             <div className="message-content">
-              {isResearch ? "Enter a topic to generate a comprehensive research report." : "Welcome to Sentiq.AI! Type a message to start chatting."}
+              {isResearch ? "Enter a topic to generate a comprehensive research report." : "Welcome to Rumii.AI! Type a message to start chatting."}
             </div>
           </div>
         )}

@@ -1,4 +1,4 @@
-import os
+﻿import os
 import sys
 import json
 import time
@@ -142,7 +142,7 @@ async def perform_audit(playwright, user_credentials, other_user_id=None):
     page.on("response", handle_response)
     page.on("console", handle_console)
     
-    url = "https://sentiq-ai.vercel.app"
+    url = "https://rumii-ai.vercel.app"
     print(f"Navigating to {url}")
     await page.goto(url)
     
@@ -152,7 +152,7 @@ async def perform_audit(playwright, user_credentials, other_user_id=None):
     await page.fill("input[placeholder='Password']", user_credentials['password'])
     await page.click("button:has-text('Login')")
     
-    await page.wait_for_selector("text=Sentiq.AI", timeout=10000)
+    await page.wait_for_selector("text=Rumii.AI", timeout=10000)
     
     audit_state.other_user_id = other_user_id
     
