@@ -1,16 +1,16 @@
 {
   "rewrites": [
-    { "source": "/auth/(.*)", "destination": "https://rumiiai-2kw5z1st.b4a.run/auth/$1" },
-    { "source": "/system/(.*)", "destination": "https://rumiiai-2kw5z1st.b4a.run/system/$1" },
-    { "source": "/chat/(.*)", "destination": "https://rumiiai-2kw5z1st.b4a.run/chat/$1" },
-    { "source": "/documents/(.*)", "destination": "https://rumiiai-2kw5z1st.b4a.run/documents/$1" },
-    { "source": "/email/(.*)", "destination": "https://rumiiai-2kw5z1st.b4a.run/email/$1" },
-    { "source": "/calendar/(.*)", "destination": "https://rumiiai-2kw5z1st.b4a.run/calendar/$1" },
-    { "source": "/notes/(.*)", "destination": "https://rumiiai-2kw5z1st.b4a.run/notes/$1" },
-    { "source": "/tasks/(.*)", "destination": "https://rumiiai-2kw5z1st.b4a.run/tasks/$1" },
-    { "source": "/scheduled-tasks/(.*)", "destination": "https://rumiiai-2kw5z1st.b4a.run/scheduled-tasks/$1" },
-    { "source": "/settings/(.*)", "destination": "https://rumiiai-2kw5z1st.b4a.run/settings/$1" },
-    { "source": "/login", "destination": "https://rumiiai-2kw5z1st.b4a.run/login" },
+    { "source": "/auth/(.*)", "destination": "https://rumii-ai.onrender.com/auth/$1" },
+    { "source": "/system/(.*)", "destination": "https://rumii-ai.onrender.com/system/$1" },
+    { "source": "/chat/(.*)", "destination": "https://rumii-ai.onrender.com/chat/$1" },
+    { "source": "/documents/(.*)", "destination": "https://rumii-ai.onrender.com/documents/$1" },
+    { "source": "/email/(.*)", "destination": "https://rumii-ai.onrender.com/email/$1" },
+    { "source": "/calendar/(.*)", "destination": "https://rumii-ai.onrender.com/calendar/$1" },
+    { "source": "/notes/(.*)", "destination": "https://rumii-ai.onrender.com/notes/$1" },
+    { "source": "/tasks/(.*)", "destination": "https://rumii-ai.onrender.com/tasks/$1" },
+    { "source": "/scheduled-tasks/(.*)", "destination": "https://rumii-ai.onrender.com/scheduled-tasks/$1" },
+    { "source": "/settings/(.*)", "destination": "https://rumii-ai.onrender.com/settings/$1" },
+    { "source": "/login", "destination": "https://rumii-ai.onrender.com/login" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
