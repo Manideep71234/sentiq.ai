@@ -9,6 +9,7 @@ from core.auth import get_current_user
 from core.limiter import limiter
 from itsdangerous import URLSafeTimedSerializer
 from core.config import settings
+import os
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
