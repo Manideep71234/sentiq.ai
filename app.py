@@ -1,4 +1,4 @@
-﻿import logging
+import logging
 import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
@@ -135,6 +135,10 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan, title="Rumii.AI")
 app.state.limiter = limiter
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
 
 # Exception handler for Rate Limits
 @app.exception_handler(RateLimitExceeded)

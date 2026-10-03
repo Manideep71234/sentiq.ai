@@ -50,17 +50,18 @@ def register(request: Request, register_data: LoginRequest, db: Session = Depend
     )
     db.add(new_user)
     try:
+        db.flush() # Flush to get new_user.id
+        
+        if not is_first_user and register_data.invite_code:
+            invite.is_used = True
+            invite.used_by = new_user.id
+            db.add(invite)
+            
         db.commit()
         db.refresh(new_user)
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Database error during registration: {str(e)}")
-
-    if not is_first_user and register_data.invite_code:
-        invite.is_used = True
-        invite.used_by = new_user.id
-        db.add(invite)
-        db.commit()
     
     return {"message": "User created successfully. You can now log in."}
 
