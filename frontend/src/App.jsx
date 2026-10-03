@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Menu, Wand2, MessageSquare } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import MouseTracker from './components/MouseTracker';
@@ -54,7 +54,7 @@ function App() {
     return hash || 'chat';
   });
   const [user, setUser] = useState({ username: 'Loading...' });
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+  const [theme, setTheme] = useState('light');
   const [showStartup, setShowStartup] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -70,13 +70,9 @@ function App() {
     window.location.hash = activeView;
   }, [activeView]);
 
-
-
-
   useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    localStorage.setItem('theme', theme);
-  }, [theme]);
+    document.documentElement.dataset.theme = 'light';
+  }, []);
 
   useEffect(() => {
     const handleViewChange = (e) => {
@@ -133,7 +129,7 @@ function App() {
   }
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+    // Theme is locked to light mode
   };
 
   return (

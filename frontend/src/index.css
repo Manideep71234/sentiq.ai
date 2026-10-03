@@ -89,15 +89,21 @@
   background: var(--text-secondary);
 }
 
+@keyframes fadeInSmooth {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  background-color: #09090b;
+  background-color: var(--bg-gradient);
   color: var(--text-primary);
   height: 100vh;
   width: 100vw;
   overflow: hidden;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  animation: fadeInSmooth 0.8s ease-out forwards;
 }
 
 [data-theme="dark"] body {
