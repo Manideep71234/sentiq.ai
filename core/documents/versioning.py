@@ -16,7 +16,7 @@ def create_snapshot_if_needed(session: Session, document: Document, force: bool 
         .order_by(DocumentVersion.created_at.desc())
     ).first()
 
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    now = datetime.now(timezone.utc)
     
     should_snapshot = force
     

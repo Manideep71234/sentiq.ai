@@ -14,7 +14,7 @@ def log_event(db: Session, user_id: int | None, event_type: str, metadata: dict 
             user_id=user_id,
             event_type=event_type,
             metadata_json=json.dumps(metadata) if metadata else None,
-            created_at=datetime.now(timezone.utc).replace(tzinfo=None)
+            created_at=datetime.now(timezone.utc)
         )
         db.add(log)
         db.commit()

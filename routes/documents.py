@@ -145,7 +145,7 @@ def update_document(doc_id: int, doc_data: dict, user: User = Depends(get_curren
     if "content" in doc_data:
         doc.content = doc_data["content"]
         
-    doc.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+    doc.updated_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(doc)
     
@@ -199,7 +199,7 @@ def restore_version(doc_id: int, version_id: int, user: User = Depends(get_curre
     
     # Restore content
     doc.content = version.content
-    doc.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+    doc.updated_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(doc)
     
@@ -241,7 +241,7 @@ async def auto_rename_document(doc_id: int, user: User = Depends(get_current_use
         cleaned_title = generated_title.strip().replace('"', '').replace('*', '').replace('#', '')
         if cleaned_title:
             doc.title = cleaned_title
-            doc.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            doc.updated_at = datetime.now(timezone.utc)
             db.commit()
             db.refresh(doc)
             return doc
@@ -258,7 +258,7 @@ async def get_ws_user(websocket: WebSocket, db: Session) -> User | None:
     if not session_id:
         return None
     session_db = db.exec(select(SessionModel).where(SessionModel.session_id == session_id)).first()
-    if not session_db or session_db.expires_at < datetime.now(timezone.utc).replace(tzinfo=None):
+    if not session_db or session_db.expires_at < datetime.now(timezone.utc):
         return None
     user = db.exec(select(User).where(User.id == session_db.user_id)).first()
     return user

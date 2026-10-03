@@ -44,7 +44,7 @@ async def execute_scheduled_task(scheduled_task_id: int):
             
             # Update last run
             from datetime import datetime, timezone
-            scheduled_task.last_run_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            scheduled_task.last_run_at = datetime.now(timezone.utc)
             
             db.commit()
         except Exception as e:

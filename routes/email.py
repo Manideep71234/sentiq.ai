@@ -211,7 +211,7 @@ async def generate_summary(thread_id: str, data: dict, user: User = Depends(get_
         db.add(cache)
         
     cache.summary = summary
-    cache.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+    cache.updated_at = datetime.now(timezone.utc)
     db.commit()
     
     return {"summary": summary}
@@ -240,7 +240,7 @@ async def generate_triage(thread_id: str, data: dict, user: User = Depends(get_c
         db.add(cache)
         
     cache.triage_tag = final_tag
-    cache.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+    cache.updated_at = datetime.now(timezone.utc)
     db.commit()
     
     return {"triage_tag": final_tag}

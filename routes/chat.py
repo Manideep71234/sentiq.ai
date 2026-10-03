@@ -153,7 +153,7 @@ def sync_save_assistant_message(session_id: int, full_assistant_message: str):
             
         chat_session = db.exec(select(ChatSession).where(ChatSession.id == session_id)).first()
         if chat_session:
-            chat_session.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            chat_session.updated_at = datetime.now(timezone.utc)
         db.commit()
 
 def log_usage(user_id: int, model_name: str, prompt_text: str, completion_text: str):
@@ -227,7 +227,7 @@ async def get_ws_user(websocket: WebSocket) -> User | None:
         return None
     with Session(engine) as db:
         session_db = db.exec(select(SessionModel).where(SessionModel.session_id == session_id)).first()
-        if not session_db or session_db.expires_at < datetime.now(timezone.utc).replace(tzinfo=None):
+        if not session_db or session_db.expires_at < datetime.now(timezone.utc):
             return None
         user = db.exec(select(User).where(User.id == session_db.user_id)).first()
         # Return a detached instance or just pass the ID around. Let's make a safe detached copy.

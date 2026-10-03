@@ -13,7 +13,7 @@ def get_current_user(request: Request, db: Session = Depends(get_session)):
         )
     
     session_db = db.exec(select(SessionModel).where(SessionModel.session_id == session_id)).first()
-    if not session_db or session_db.expires_at < datetime.now(timezone.utc).replace(tzinfo=None):
+    if not session_db or session_db.expires_at < datetime.now(timezone.utc):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Session expired or invalid"
@@ -39,7 +39,7 @@ def get_current_user_optional(request: Request, db: Session = Depends(get_sessio
         return None
         
     session_db = db.exec(select(SessionModel).where(SessionModel.session_id == session_id)).first()
-    if not session_db or session_db.expires_at < datetime.now(timezone.utc).replace(tzinfo=None):
+    if not session_db or session_db.expires_at < datetime.now(timezone.utc):
         return None
         
     user = db.exec(select(User).where(User.id == session_db.user_id)).first()

@@ -112,7 +112,7 @@ async def update_api_keys(keys: APIKeysUpdate, user: User = Depends(get_current_
         else:
             settings.gemini_api_key = encrypt_string(keys.gemini_api_key.strip())
             
-    settings.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+    settings.updated_at = datetime.now(timezone.utc)
     db.commit()
     
     from core.audit import log_event

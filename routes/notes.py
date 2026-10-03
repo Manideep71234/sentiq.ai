@@ -34,7 +34,7 @@ def update_note(note_id: int, data: dict, user: User = Depends(get_current_user)
     if "body" in data: note.body = data["body"]
     if "tags" in data: note.tags = data["tags"]
     
-    note.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+    note.updated_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(note)
     return note

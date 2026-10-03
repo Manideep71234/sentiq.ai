@@ -1,4 +1,4 @@
-﻿from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from sqlmodel import Session, select
 from datetime import datetime, timedelta, timezone
 from pydantic import BaseModel
@@ -77,7 +77,7 @@ def login(request: Request, response: Response, login_data: LoginRequest, db: Se
         )
     
     session_id = generate_session_id()
-    expires_at = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=7)
+    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
     
     session_db = SessionModel(
         session_id=session_id,
@@ -364,7 +364,7 @@ async def webauthn_login_verify(request: Request, response: Response, db: Sessio
     user = db.exec(select(User).where(User.id == credential_db.user_id)).first()
     
     session_id = generate_session_id()
-    expires_at = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=7)
+    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
     
     session_db = SessionModel(
         session_id=session_id,
@@ -547,7 +547,7 @@ async def google_callback(code: str, response: Response, db: Session = Depends(g
     
     # Create Session
     session_id = generate_session_id()
-    expires_at = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=7)
+    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
     session_db = SessionModel(
         session_id=session_id,
         user_id=user.id,
