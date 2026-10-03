@@ -1,16 +1,16 @@
 {
   "rewrites": [
-    { "source": "/auth/(.*)", "destination": "https://rumiiai-prvyhpxy.b4a.run/auth/$1" },
-    { "source": "/system/(.*)", "destination": "https://rumiiai-prvyhpxy.b4a.run/system/$1" },
-    { "source": "/chat/(.*)", "destination": "https://rumiiai-prvyhpxy.b4a.run/chat/$1" },
-    { "source": "/documents/(.*)", "destination": "https://rumiiai-prvyhpxy.b4a.run/documents/$1" },
-    { "source": "/email/(.*)", "destination": "https://rumiiai-prvyhpxy.b4a.run/email/$1" },
-    { "source": "/calendar/(.*)", "destination": "https://rumiiai-prvyhpxy.b4a.run/calendar/$1" },
-    { "source": "/notes/(.*)", "destination": "https://rumiiai-prvyhpxy.b4a.run/notes/$1" },
-    { "source": "/tasks/(.*)", "destination": "https://rumiiai-prvyhpxy.b4a.run/tasks/$1" },
-    { "source": "/scheduled-tasks/(.*)", "destination": "https://rumiiai-prvyhpxy.b4a.run/scheduled-tasks/$1" },
-    { "source": "/settings/(.*)", "destination": "https://rumiiai-prvyhpxy.b4a.run/settings/$1" },
-    { "source": "/login", "destination": "https://rumiiai-prvyhpxy.b4a.run/login" },
+    { "source": "/auth/(.*)", "destination": "https://rumiiai-2kw5z1st.b4a.run/auth/$1" },
+    { "source": "/system/(.*)", "destination": "https://rumiiai-2kw5z1st.b4a.run/system/$1" },
+    { "source": "/chat/(.*)", "destination": "https://rumiiai-2kw5z1st.b4a.run/chat/$1" },
+    { "source": "/documents/(.*)", "destination": "https://rumiiai-2kw5z1st.b4a.run/documents/$1" },
+    { "source": "/email/(.*)", "destination": "https://rumiiai-2kw5z1st.b4a.run/email/$1" },
+    { "source": "/calendar/(.*)", "destination": "https://rumiiai-2kw5z1st.b4a.run/calendar/$1" },
+    { "source": "/notes/(.*)", "destination": "https://rumiiai-2kw5z1st.b4a.run/notes/$1" },
+    { "source": "/tasks/(.*)", "destination": "https://rumiiai-2kw5z1st.b4a.run/tasks/$1" },
+    { "source": "/scheduled-tasks/(.*)", "destination": "https://rumiiai-2kw5z1st.b4a.run/scheduled-tasks/$1" },
+    { "source": "/settings/(.*)", "destination": "https://rumiiai-2kw5z1st.b4a.run/settings/$1" },
+    { "source": "/login", "destination": "https://rumiiai-2kw5z1st.b4a.run/login" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
