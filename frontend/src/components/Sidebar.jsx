@@ -90,9 +90,6 @@ export default function Sidebar({ activeView, setActiveView, user, toggleTheme, 
             <button className="theme-toggle" onClick={() => setIsCollapsed(!isCollapsed)} title="Toggle Sidebar">
               {isCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
             </button>
-            <button className="theme-toggle" onClick={toggleTheme} title="Toggle Theme" style={isCollapsed ? { display: 'none' } : {}}>
-              {theme === 'dark' ? '☀️' : '🌙'}
-            </button>
           </div>
         </div>
         

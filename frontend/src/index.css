@@ -27,11 +27,11 @@
   --mouse-glow: rgba(0, 0, 0, 0.15);
 
   /* Sidebar specific */
-  --sidebar-bg: #0a0a0a;
-  --sidebar-text: #ffffff;
-  --sidebar-border: rgba(255, 255, 255, 0.1);
-  --sidebar-item-hover: rgba(255, 255, 255, 0.08);
-  --sidebar-accent: #ffffff;
+  --sidebar-bg: #f9f9f9;
+  --sidebar-text: #0a0a0a;
+  --sidebar-border: rgba(0, 0, 0, 0.1);
+  --sidebar-item-hover: rgba(0, 0, 0, 0.05);
+  --sidebar-accent: #000000;
 }
 
 [data-theme="dark"] {
