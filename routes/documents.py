@@ -1,4 +1,4 @@
-﻿import json
+import json
 from datetime import datetime, timezone
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException, status
 from sqlmodel import Session, select
@@ -9,6 +9,7 @@ from core.documents.versioning import create_snapshot_if_needed
 from core.providers import get_provider
 from pydantic import BaseModel
 import asyncio
+import re
 
 class GenerateDocumentRequest(BaseModel):
     prompt: str
@@ -205,6 +206,51 @@ def restore_version(doc_id: int, version_id: int, user: User = Depends(get_curre
     # Create snapshot of newly restored state
     create_snapshot_if_needed(db, doc, force=True)
     return doc
+
+@router.post("/{doc_id}/auto-rename")
+async def auto_rename_document(doc_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_session)):
+    doc = db.exec(select(Document).where(Document.id == doc_id, Document.user_id == user.id)).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+        
+    if not doc.content or len(doc.content.strip()) < 10:
+        raise HTTPException(status_code=400, detail="Document is too short to generate a title.")
+        
+    user_settings = db.exec(select(UserSettings).where(UserSettings.user_id == user.id)).first()
+    # Default to openrouter/free or user's preferred model, but let's just use openrouter/free for simplicity
+    provider = get_provider("openrouter", user_settings)
+    if not provider:
+        raise HTTPException(status_code=400, detail="AI Provider not configured")
+        
+    # Strip HTML tags for the prompt
+    clean_content = re.sub('<[^<]+>', '', doc.content)
+    # Truncate content to avoid huge prompts
+    clean_content = clean_content[:3000]
+    
+    messages = [
+        {"role": "system", "content": "You are a title generator. Generate a short, 3-5 word title for the following document text. Output ONLY the title, no quotes, no formatting."},
+        {"role": "user", "content": clean_content}
+    ]
+    
+    generated_title = ""
+    try:
+        async for chunk in provider.generate_stream(messages, model="openrouter/free"):
+            if chunk.get("type") == "content":
+                generated_title += chunk.get("delta", "")
+        
+        cleaned_title = generated_title.strip().replace('"', '').replace('*', '').replace('#', '')
+        if cleaned_title:
+            doc.title = cleaned_title
+            doc.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            db.commit()
+            db.refresh(doc)
+            return doc
+        else:
+            raise HTTPException(status_code=500, detail="Generated empty title")
+    except Exception as e:
+        import logging
+        logging.error(f"Auto-rename failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate title")
 
 # WebSocket Endpoint for AI Edits
 async def get_ws_user(websocket: WebSocket, db: Session) -> User | None:

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import DOMPurify from 'dompurify';
 import { 
   Clock, Save, FileSpreadsheet, Search, Bold, Italic, Underline as UnderlineIcon, 
@@ -376,12 +376,39 @@ export default function DocumentEditor({ doc, onUpdate, onToggleVersions }) {
       
       {/* Editor Header */}
       <div style={{ padding: '0.75rem 1.5rem', borderBottom: docType === 'csv' ? '1px solid var(--panel-border)' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'transparent' }}>
-        <input 
-          value={title} 
-          onChange={(e) => setTitle(e.target.value)}
-          style={{ fontSize: '1.2rem', fontWeight: 600, border: 'none', outline: 'none', background: 'transparent', flex: 1, color: 'var(--text-primary)' }}
-          placeholder="Untitled Document"
-        />
+        <div style={{ display: 'flex', alignItems: 'center', flex: 1, gap: '0.5rem' }}>
+          <input 
+            value={title} 
+            onChange={(e) => setTitle(e.target.value)}
+            style={{ fontSize: '1.2rem', fontWeight: 600, border: 'none', outline: 'none', background: 'transparent', width: 'auto', flexShrink: 1, minWidth: '200px', color: 'var(--text-primary)' }}
+            placeholder="Untitled Document"
+          />
+          <button 
+            onClick={async () => {
+              try {
+                const res = await fetch(`/documents/${doc.id}/auto-rename`, { method: 'POST' });
+                if (!res.ok) {
+                  const err = await res.json();
+                  throw new Error(err.detail || 'Failed to rename');
+                }
+                const updated = await res.json();
+                setTitle(updated.title);
+                onUpdate(updated);
+              } catch (e) {
+                console.error(e);
+                alert(e.message);
+              }
+            }}
+            title="Auto-rename based on content"
+            style={{ 
+              display: 'flex', alignItems: 'center', gap: '0.25rem', padding: '0.25rem 0.5rem', 
+              background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', 
+              border: '1px solid rgba(139, 92, 246, 0.2)', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 500
+            }}
+          >
+            <Sparkles size={12} /> AI Rename
+          </button>
+        </div>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           {docType !== 'csv' && (
