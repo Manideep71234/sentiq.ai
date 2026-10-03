@@ -1,4 +1,4 @@
-﻿# ===== Stage 1: Build Frontend =====
+# ===== Stage 1: Build Frontend =====
 FROM node:20-alpine AS frontend-builder
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
@@ -25,7 +25,7 @@ COPY . .
 # Copy built frontend from stage 1
 COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
 
-# Port 8000 (Back4App auto-detects)
+# Render uses PORT env var (defaults to 10000), fallback to 8000
 EXPOSE 8000
 
 ENV HOST=0.0.0.0
@@ -34,6 +34,6 @@ ENV PYTHONUNBUFFERED=1
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 \
-  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:${PORT}/health')"
 
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+CMD uvicorn app:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1
