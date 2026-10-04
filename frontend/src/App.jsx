@@ -61,8 +61,8 @@ function App() {
   const [chatTitle, setChatTitle] = useState('Chat');
 
   useEffect(() => {
-    // Hide startup animation after 2.5s
-    const timer = setTimeout(() => setShowStartup(false), 2500);
+    // Hide startup animation after 3.2s for a sleek hold
+    const timer = setTimeout(() => setShowStartup(false), 3200);
     return () => clearTimeout(timer);
   }, []);
 

@@ -1,10 +1,17 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600&family=Outfit:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600&family=Outfit:wght@300;400;500;600&family=Great+Vibes&display=swap');
 
 /* ========== MINECRAFT FONT UTILITY ========== */
 .font-minecraft {
   font-family: 'Press Start 2P', monospace;
   letter-spacing: 0.05em;
   line-height: 1.8;
+}
+
+/* ========== CURSIVE FONT UTILITY ========== */
+.font-cursive {
+  font-family: 'Great Vibes', cursive;
+  font-size: 1.4em;
+  font-weight: 400;
 }
 
 :root {
@@ -187,35 +194,44 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.5s ease;
+  transition: opacity 0.8s ease-in-out, filter 0.8s ease-in-out;
 }
 
 .startup-overlay.fade-out {
   opacity: 0;
+  filter: blur(10px);
   pointer-events: none;
 }
 
 .handwriting-svg {
-  width: 300px;
-  height: 100px;
+  width: 350px;
+  height: 120px;
 }
 
 .handwriting-text {
-  font-family: 'Outfit', sans-serif;
-  font-size: 3rem;
-  font-weight: 700;
-  fill: transparent;
-  stroke: var(--accent-color);
-  stroke-width: 2px;
-  stroke-dasharray: 400;
-  stroke-dashoffset: 400;
-  animation: drawHandwriting 1.5s ease forwards;
+  font-family: 'Great Vibes', cursive;
+  font-size: 4.5rem;
+  font-weight: 400;
+  fill: var(--text-primary);
+  opacity: 0;
+  animation: sleekHello 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-@keyframes drawHandwriting {
-  to {
-    stroke-dashoffset: 0;
-    fill: var(--text-primary);
+@keyframes sleekHello {
+  0% { 
+    opacity: 0; 
+    transform: scale(0.95) translateY(10px); 
+    filter: blur(5px);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+  100% { 
+    opacity: 1; 
+    transform: scale(1) translateY(0); 
+    filter: blur(0);
   }
 }
 
