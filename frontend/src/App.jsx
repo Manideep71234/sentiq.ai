@@ -153,14 +153,10 @@ function App() {
         <div className={`startup-overlay ${greetingIndex === greetings.length - 1 && !showStartup ? 'fade-out' : ''}`}>
           <div key={greetingIndex} className="hello-text" style={greetingIndex === greetings.length - 1 ? { animation: 'none', opacity: 1 } : {}}>
             {greetingIndex === greetings.length - 1 ? (
-              <svg className="handwriting-svg" viewBox="0 0 300 100">
-                {/* Cursive Rumii */}
-                <text x="35%" y="50%" textAnchor="end" dominantBaseline="middle" className="handwriting-text-cursive">
-                  Rumii
-                </text>
-                {/* Sans-serif .AI */}
-                <text x="37%" y="50%" textAnchor="start" dominantBaseline="middle" className="handwriting-text-sans" opacity="0.85">
-                  .AI
+              <svg className="handwriting-svg" viewBox="0 0 400 100">
+                <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle">
+                  <tspan className="handwriting-text-cursive">Rumii</tspan>
+                  <tspan className="handwriting-text-sans" dx="2" dy="-3" opacity="0.85">.AI</tspan>
                 </text>
               </svg>
             ) : (
