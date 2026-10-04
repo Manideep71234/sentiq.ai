@@ -8,28 +8,28 @@
 }
 
 :root {
-  /* Light Theme — Clean White & Black */
-  --bg-gradient: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
-  --panel-bg: rgba(255, 255, 255, 0.95);
-  --panel-border: rgba(0, 0, 0, 0.12);
-  --text-primary: #0a0a0a;
-  --text-secondary: #4a4a4a;
+  /* Ultra-Clean White & Black Theme */
+  --bg-gradient: #ffffff;
+  --panel-bg: #ffffff;
+  --panel-border: rgba(0, 0, 0, 0.15);
+  --text-primary: #000000;
+  --text-secondary: #000000;
   --accent-color: #000000;
   --accent-hover: #333333;
-  --sidebar-hover: rgba(0, 0, 0, 0.06);
+  --sidebar-hover: rgba(0, 0, 0, 0.05);
   --user-msg-bg: rgba(0, 0, 0, 0.05);
-  --system-msg-bg: rgba(255, 255, 255, 0.9);
-  --shadow-subtle: 0 4px 24px 0 rgba(0, 0, 0, 0.08);
+  --system-msg-bg: #ffffff;
+  --shadow-subtle: 0 4px 24px 0 rgba(0, 0, 0, 0.1);
   --radius-lg: 16px;
   --radius-md: 8px;
   --font-size-base: 0.95rem;
   --spacing-base: 0.75rem;
-  --mouse-glow: rgba(0, 0, 0, 0.15);
+  --mouse-glow: transparent;
 
   /* Sidebar specific */
-  --sidebar-bg: #f9f9f9;
-  --sidebar-text: #0a0a0a;
-  --sidebar-border: rgba(0, 0, 0, 0.1);
+  --sidebar-bg: #ffffff;
+  --sidebar-text: #000000;
+  --sidebar-border: rgba(0, 0, 0, 0.15);
   --sidebar-item-hover: rgba(0, 0, 0, 0.05);
   --sidebar-accent: #000000;
 }
