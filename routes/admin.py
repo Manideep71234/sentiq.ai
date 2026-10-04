@@ -289,18 +289,20 @@ async def test_mcp_server(data: MCPServerCreate, admin: User = Depends(get_admin
     from contextlib import AsyncExitStack
     import os
     
-    merged_env = os.environ.copy()
-    merged_env.update(data.env_vars)
-    
     if data.command.startswith("http://") or data.command.startswith("https://"):
         from mcp.client.sse import sse_client
-        # For SSE, command is the URL. Pass env_vars as headers.
+        # For SSE, command is the URL. Pass only user-provided env_vars as headers (prevent leaking os.environ)
         is_sse = True
         url = data.command
-        headers = merged_env
+        headers = data.env_vars
     else:
         from mcp.client.stdio import stdio_client
         is_sse = False
+        
+        # For local processes, merge with os.environ so PATH etc is preserved
+        merged_env = os.environ.copy()
+        merged_env.update(data.env_vars)
+        
         params = StdioServerParameters(
             command=data.command,
             args=data.args,

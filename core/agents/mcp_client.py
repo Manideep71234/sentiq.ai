@@ -30,17 +30,17 @@ class MCPClientManager:
                     except Exception:
                         pass
                 
-                # Merge with os.environ so PATH etc is preserved
-                merged_env = os.environ.copy()
-                merged_env.update(env_vars)
-                
                 if s.command.startswith("http://") or s.command.startswith("https://"):
                     configs[s.name] = {
                         "transport": "sse",
                         "url": s.command,
-                        "env": merged_env
+                        "env": env_vars
                     }
                 else:
+                    # Merge with os.environ so PATH etc is preserved for local stdio
+                    merged_env = os.environ.copy()
+                    merged_env.update(env_vars)
+                    
                     configs[s.name] = {
                         "transport": "stdio",
                         "params": StdioServerParameters(
