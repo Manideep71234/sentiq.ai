@@ -328,4 +328,9 @@ async def test_mcp_server(data: MCPServerCreate, admin: User = Depends(get_admin
                 })
         return {"status": "ok", "tools": tools}
     except Exception as e:
-        raise HTTPException(500, f"Failed to connect to MCP server: {str(e)}")
+        error_msg = str(e)
+        if "unhandled errors in a TaskGroup" in error_msg or "ConnectionRefused" in error_msg:
+            error_msg = "Could not connect to the remote server. Verify the URL is correct and the server is running."
+        elif "FileNotFound" in error_msg or "No such file" in error_msg:
+            error_msg = f"Invalid command: '{data.command}' could not be found. If it's a URL, select 'Remote'."
+        raise HTTPException(status_code=400, detail=f"Failed to connect to MCP server: {error_msg}")

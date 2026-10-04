@@ -7,7 +7,7 @@ export default function MCPServers() {
   const [editingId, setEditingId] = useState(null);
   
   const [formData, setFormData] = useState({
-    name: '', command: '', args: '', env_vars: '', enabled: true
+    name: '', type: 'local', command: '', args: '', env_vars: '', enabled: true
   });
   
   const [testResult, setTestResult] = useState(null);
@@ -18,20 +18,25 @@ export default function MCPServers() {
   }, []);
 
   const fetchServers = async () => {
-    const res = await fetch('/admin/mcp-servers');
-    if (res.ok) {
-      const data = await res.json();
-      setServers(data);
+    try {
+      const res = await fetch('/admin/mcp-servers');
+      if (res.ok) {
+        const data = await res.json();
+        setServers(data);
+      }
+    } catch(e) {
+      console.error(e);
     }
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
     
-    // Parse args from newline string to array
-    const argsArray = formData.args.split('\n').map(a => a.trim()).filter(a => a);
+    let argsArray = [];
+    if (formData.type === 'local') {
+      argsArray = formData.args.split('\n').map(a => a.trim()).filter(a => a);
+    }
     
-    // Parse env vars from key=value lines
     const envObj = {};
     formData.env_vars.split('\n').forEach(line => {
       const parts = line.split('=');
@@ -39,6 +44,12 @@ export default function MCPServers() {
         envObj[parts[0].trim()] = parts.slice(1).join('=').trim();
       }
     });
+
+    // Enforce URL check for remote
+    if (formData.type === 'remote' && !formData.command.startsWith('http')) {
+      alert("Remote server URLs must start with http:// or https://");
+      return;
+    }
 
     const payload = {
       name: formData.name,
@@ -51,19 +62,31 @@ export default function MCPServers() {
     const url = editingId ? `/admin/mcp-servers/${editingId}` : '/admin/mcp-servers';
     const method = editingId ? 'PUT' : 'POST';
 
-    const res = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      let data;
+      const text = await res.text();
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch(e) {
+        data = { detail: `Server returned invalid JSON. HTTP ${res.status}: ${text.slice(0, 100)}` };
+      }
 
-    if (res.ok) {
-      setShowForm(false);
-      setEditingId(null);
-      setTestResult(null);
-      fetchServers();
-    } else {
-      alert('Failed to save MCP server');
+      if (res.ok) {
+        setShowForm(false);
+        setEditingId(null);
+        setTestResult(null);
+        fetchServers();
+      } else {
+        alert(data.detail || 'Failed to save MCP server');
+      }
+    } catch(e) {
+      alert(`Network error: ${e.message}`);
     }
   };
 
@@ -78,7 +101,17 @@ export default function MCPServers() {
     setIsTesting(true);
     setTestResult(null);
     
-    const argsArray = formData.args.split('\n').map(a => a.trim()).filter(a => a);
+    // Enforce URL check for remote
+    if (formData.type === 'remote' && !formData.command.startsWith('http')) {
+      setTestResult({ success: false, error: "Remote server URLs must start with http:// or https://" });
+      setIsTesting(false);
+      return;
+    }
+
+    let argsArray = [];
+    if (formData.type === 'local') {
+      argsArray = formData.args.split('\n').map(a => a.trim()).filter(a => a);
+    }
     const envObj = {};
     formData.env_vars.split('\n').forEach(line => {
       const parts = line.split('=');
@@ -98,7 +131,14 @@ export default function MCPServers() {
           env_vars: envObj
         })
       });
-      const data = await res.json();
+      
+      let data;
+      const text = await res.text();
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch(e) {
+        data = { detail: `Server returned invalid JSON. HTTP ${res.status}: ${text.slice(0, 100)}` };
+      }
       
       if (res.ok) {
         setTestResult({ success: true, tools: data.tools });
@@ -112,8 +152,10 @@ export default function MCPServers() {
   };
 
   const editServer = (server) => {
+    const isRemote = server.command.startsWith('http://') || server.command.startsWith('https://');
     setFormData({
       name: server.name,
+      type: isRemote ? 'remote' : 'local',
       command: server.command,
       args: server.args.join('\n'),
       env_vars: Object.entries(server.env_vars).map(([k, v]) => `${k}=${v}`).join('\n'),
@@ -139,7 +181,7 @@ export default function MCPServers() {
           <button 
             className="btn-primary" 
             onClick={() => {
-              setFormData({ name: '', command: '', args: '', env_vars: '', enabled: true });
+              setFormData({ name: '', type: 'local', command: '', args: '', env_vars: '', enabled: true });
               setEditingId(null);
               setShowForm(true);
               setTestResult(null);
@@ -160,24 +202,39 @@ export default function MCPServers() {
           </div>
           
           <form onSubmit={handleSave}>
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem' }}>Server Name (Identifier)</label>
-              <input type="text" className="input-field" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="e.g. workspace-fs" />
+            <div style={{ marginBottom: '1rem', display: 'flex', gap: '1rem' }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem' }}>Server Name (Identifier)</label>
+                <input type="text" className="input-field" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="e.g. workspace-fs" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem' }}>Server Type</label>
+                <select className="input-field" value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})}>
+                  <option value="local">Local (Command)</option>
+                  <option value="remote">Remote (HTTP/SSE URL)</option>
+                </select>
+              </div>
             </div>
             
             <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem' }}>Command (e.g. npx, python, docker)</label>
-              <input type="text" className="input-field" required value={formData.command} onChange={e => setFormData({...formData, command: e.target.value})} />
+              <label style={{ display: 'block', marginBottom: '0.5rem' }}>
+                {formData.type === 'local' ? 'Command (e.g. npx, python, docker)' : 'Server URL (must start with http:// or https://)'}
+              </label>
+              <input type="text" className="input-field" required value={formData.command} onChange={e => setFormData({...formData, command: e.target.value})} placeholder={formData.type === 'local' ? 'npx' : 'https://jntuhresults.dhethi.com/mcp'} />
             </div>
             
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem' }}>Arguments (One per line)</label>
-              <textarea className="input-field" rows={3} value={formData.args} onChange={e => setFormData({...formData, args: e.target.value})} placeholder="-y&#10;@modelcontextprotocol/server-sqlite&#10;/path/to/db.sqlite" />
-            </div>
+            {formData.type === 'local' && (
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem' }}>Arguments (One per line)</label>
+                <textarea className="input-field" rows={3} value={formData.args} onChange={e => setFormData({...formData, args: e.target.value})} placeholder="-y&#10;@modelcontextprotocol/server-sqlite&#10;/path/to/db.sqlite" />
+              </div>
+            )}
             
             <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem' }}>Environment Variables (KEY=VALUE, one per line, encrypted at rest)</label>
-              <textarea className="input-field" rows={3} value={formData.env_vars} onChange={e => setFormData({...formData, env_vars: e.target.value})} placeholder="API_KEY=your_secret_key" />
+              <label style={{ display: 'block', marginBottom: '0.5rem' }}>
+                {formData.type === 'local' ? 'Environment Variables' : 'HTTP Headers'} (KEY=VALUE, one per line, encrypted at rest)
+              </label>
+              <textarea className="input-field" rows={3} value={formData.env_vars} onChange={e => setFormData({...formData, env_vars: e.target.value})} placeholder={formData.type === 'local' ? 'API_KEY=your_secret_key' : 'Authorization=Bearer your_token'} />
             </div>
             
             <div style={{ marginBottom: '1.5rem' }}>
@@ -221,23 +278,30 @@ export default function MCPServers() {
               No MCP servers configured. Add one to expand the AI's capabilities!
             </div>
           ) : (
-            servers.map(server => (
-              <div key={server.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem', background: 'var(--panel-bg)', border: '1px solid var(--panel-border)', borderRadius: '12px' }}>
-                <div>
-                  <h3 style={{ margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    {server.name}
-                    {!server.enabled && <span style={{ fontSize: '0.75rem', padding: '2px 6px', background: 'var(--panel-border)', borderRadius: '10px' }}>Disabled</span>}
-                  </h3>
-                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
-                    {server.command} {server.args.join(' ')}
+            servers.map(server => {
+              const isRemote = server.command.startsWith('http://') || server.command.startsWith('https://');
+              return (
+                <div key={server.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem', background: 'var(--panel-bg)', border: '1px solid var(--panel-border)', borderRadius: '12px' }}>
+                  <div>
+                    <h3 style={{ margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      {server.name}
+                      {!server.enabled && <span style={{ fontSize: '0.75rem', padding: '2px 6px', background: 'var(--panel-border)', borderRadius: '10px' }}>Disabled</span>}
+                      {isRemote ? 
+                        <span style={{ fontSize: '0.75rem', padding: '2px 6px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', borderRadius: '10px' }}>Remote</span> : 
+                        <span style={{ fontSize: '0.75rem', padding: '2px 6px', background: 'var(--panel-border)', borderRadius: '10px' }}>Local</span>
+                      }
+                    </h3>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
+                      {server.command} {isRemote ? '' : server.args.join(' ')}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button className="icon-button" onClick={() => editServer(server)}><Edit2 size={16} /></button>
+                    <button className="icon-button" onClick={() => handleDelete(server.id)} style={{ color: '#ff453a' }}><Trash2 size={16} /></button>
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button className="icon-button" onClick={() => editServer(server)}><Edit2 size={16} /></button>
-                  <button className="icon-button" onClick={() => handleDelete(server.id)} style={{ color: '#ff453a' }}><Trash2 size={16} /></button>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       )}
