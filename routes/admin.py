@@ -292,16 +292,29 @@ async def test_mcp_server(data: MCPServerCreate, admin: User = Depends(get_admin
     merged_env = os.environ.copy()
     merged_env.update(data.env_vars)
     
-    params = StdioServerParameters(
-        command=data.command,
-        args=data.args,
-        env=merged_env
-    )
+    if data.command.startswith("http://") or data.command.startswith("https://"):
+        from mcp.client.sse import sse_client
+        # For SSE, command is the URL. Pass env_vars as headers.
+        is_sse = True
+        url = data.command
+        headers = merged_env
+    else:
+        from mcp.client.stdio import stdio_client
+        is_sse = False
+        params = StdioServerParameters(
+            command=data.command,
+            args=data.args,
+            env=merged_env
+        )
     
     tools = []
     try:
         async with AsyncExitStack() as stack:
-            transport = await stack.enter_async_context(stdio_client(params))
+            if is_sse:
+                transport = await stack.enter_async_context(sse_client(url, headers=headers))
+            else:
+                transport = await stack.enter_async_context(stdio_client(params))
+                
             read, write = transport
             session = await stack.enter_async_context(ClientSession(read, write))
             await session.initialize()

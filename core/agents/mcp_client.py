@@ -34,11 +34,21 @@ class MCPClientManager:
                 merged_env = os.environ.copy()
                 merged_env.update(env_vars)
                 
-                configs[s.name] = StdioServerParameters(
-                    command=s.command,
-                    args=json.loads(s.args_json),
-                    env=merged_env
-                )
+                if s.command.startswith("http://") or s.command.startswith("https://"):
+                    configs[s.name] = {
+                        "transport": "sse",
+                        "url": s.command,
+                        "env": merged_env
+                    }
+                else:
+                    configs[s.name] = {
+                        "transport": "stdio",
+                        "params": StdioServerParameters(
+                            command=s.command,
+                            args=json.loads(s.args_json),
+                            env=merged_env
+                        )
+                    }
         return configs
 
     async def _get_or_create_session(self, server_name: str) -> ClientSession:
@@ -46,13 +56,19 @@ class MCPClientManager:
             return self.sessions[server_name]
             
         configs = self._get_server_configs()
-        params = configs.get(server_name)
-        if not params:
+        config = configs.get(server_name)
+        if not config:
             raise ValueError(f"Unknown MCP server {server_name}")
             
         print(f"Starting MCP server: {server_name}")
-        stdio_transport = await self.exit_stack.enter_async_context(stdio_client(params))
-        read, write = stdio_transport
+        
+        if config["transport"] == "sse":
+            from mcp.client.sse import sse_client
+            transport = await self.exit_stack.enter_async_context(sse_client(config["url"], headers=config["env"]))
+        else:
+            transport = await self.exit_stack.enter_async_context(stdio_client(config["params"]))
+            
+        read, write = transport
         session = await self.exit_stack.enter_async_context(ClientSession(read, write))
         await session.initialize()
         self.sessions[server_name] = session
