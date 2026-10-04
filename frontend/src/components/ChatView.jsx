@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Send, Square, Paperclip, X, Loader2, Mic, MicOff } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
@@ -289,7 +289,7 @@ export default function ChatView({ isResearch = false, activeView, setActiveView
       if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         return `ws://${window.location.host}`;
       }
-      return 'wss://RumiiAI-production.up.railway.app';
+      return 'wss://rumii-ai.onrender.com';
     };
 
     const targetSessionId = activeSessionId || sessionId;

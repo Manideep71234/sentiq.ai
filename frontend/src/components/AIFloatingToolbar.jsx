@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Wand2, X, Check } from 'lucide-react';
 
 export default function AIFloatingToolbar({ editorRef, docId, onContentChange, tipTapEditor = null }) {
@@ -113,7 +113,7 @@ export default function AIFloatingToolbar({ editorRef, docId, onContentChange, t
       if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         return `ws://${window.location.host}`;
       }
-      return 'wss://RumiiAI-production.up.railway.app';
+      return 'wss://rumii-ai.onrender.com';
     };
     
     const wsUrl = `${getWsBaseUrl()}/documents/ws/${docId}?token=${window.wsToken || ''}`;

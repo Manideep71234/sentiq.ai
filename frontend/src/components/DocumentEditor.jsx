@@ -163,7 +163,7 @@ function AIAssistantPanel({ editor, docId, onClose }) {
       if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         return `ws://${window.location.host}`;
       }
-      return 'wss://RumiiAI-production.up.railway.app';
+      return 'wss://rumii-ai.onrender.com';
     };
 
     const wsUrl = `${getWsBaseUrl()}/documents/ws/${docId}?token=${window.wsToken || ''}`;
