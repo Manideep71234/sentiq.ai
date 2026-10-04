@@ -60,11 +60,26 @@ function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [chatTitle, setChatTitle] = useState('Chat');
 
+  const [greetingIndex, setGreetingIndex] = useState(0);
+  const greetings = ['hello', 'hola', 'bonjour', 'Rumii.AI'];
+
   useEffect(() => {
-    // Hide startup animation after 3.2s for a sleek hold
-    const timer = setTimeout(() => setShowStartup(false), 3200);
-    return () => clearTimeout(timer);
-  }, []);
+    if (!showStartup) return;
+    
+    // Cycle through greetings every 1.5s (matches appleHello animation duration)
+    const cycleInterval = setInterval(() => {
+      setGreetingIndex((prev) => {
+        if (prev === greetings.length - 1) {
+          clearInterval(cycleInterval);
+          setTimeout(() => setShowStartup(false), 800); // Wait for last fade out then hide overlay
+          return prev;
+        }
+        return prev + 1;
+      });
+    }, 1500);
+
+    return () => clearInterval(cycleInterval);
+  }, [showStartup, greetings.length]);
 
   useEffect(() => {
     window.location.hash = activeView;
@@ -135,12 +150,17 @@ function App() {
   return (
     <div className="app-wrapper">
       {showStartup && (
-        <div className={`startup-overlay ${!showStartup ? 'fade-out' : ''}`}>
-          <svg className="handwriting-svg" viewBox="0 0 400 100">
-            <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="handwriting-text">
-              Rumii.AI
-            </text>
-          </svg>
+        <div className={`startup-overlay ${greetingIndex === greetings.length - 1 && !showStartup ? 'fade-out' : ''}`}>
+          <div key={greetingIndex} className="hello-text">
+            {greetingIndex === greetings.length - 1 ? (
+              <span style={{ fontWeight: 400, letterSpacing: '-0.02em' }}>
+                <span className="font-cursive" style={{ fontSize: '1.2em' }}>Rumii</span>
+                <span style={{ fontSize: '0.85em', fontWeight: 500, letterSpacing: '0.05em' }}>.AI</span>
+              </span>
+            ) : (
+              greetings[greetingIndex]
+            )}
+          </div>
         </div>
       )}
 

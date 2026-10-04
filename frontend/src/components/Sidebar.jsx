@@ -79,8 +79,9 @@ export default function Sidebar({ activeView, setActiveView, user, toggleTheme, 
       <aside className={`sidebar ${isOpen ? 'open' : ''} ${isCollapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span className="font-cursive" style={{ letterSpacing: '0.05em' }}>
-              Rumii<span style={{ color: 'var(--sidebar-accent)', opacity: 0.7 }}>.AI</span>
+            <span style={{ fontWeight: 400, letterSpacing: '-0.02em', fontSize: '1.2rem' }}>
+              <span className="font-cursive" style={{ fontSize: '1.4em' }}>Rumii</span>
+              <span style={{ fontSize: '0.75em', fontWeight: 600, letterSpacing: '0.05em', color: 'var(--sidebar-accent)', opacity: 0.85 }}>.AI</span>
             </span>
           </div>
           <div style={{ display: 'flex', gap: '0.25rem' }}>
