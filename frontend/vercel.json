@@ -10,6 +10,7 @@
     { "source": "/tasks/(.*)", "destination": "https://rumii-ai.onrender.com/tasks/$1" },
     { "source": "/scheduled-tasks/(.*)", "destination": "https://rumii-ai.onrender.com/scheduled-tasks/$1" },
     { "source": "/settings/(.*)", "destination": "https://rumii-ai.onrender.com/settings/$1" },
+    { "source": "/admin/(.*)", "destination": "https://rumii-ai.onrender.com/admin/$1" },
     { "source": "/login", "destination": "https://rumii-ai.onrender.com/login" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
