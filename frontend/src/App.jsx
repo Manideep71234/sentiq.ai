@@ -71,7 +71,7 @@ function App() {
       setGreetingIndex((prev) => {
         if (prev === greetings.length - 1) {
           clearInterval(cycleInterval);
-          setTimeout(() => setShowStartup(false), 800); // Wait for last fade out then hide overlay
+          setTimeout(() => setShowStartup(false), 2000); // Wait for handwriting to finish then hide overlay
           return prev;
         }
         return prev + 1;
@@ -151,12 +151,18 @@ function App() {
     <div className="app-wrapper">
       {showStartup && (
         <div className={`startup-overlay ${greetingIndex === greetings.length - 1 && !showStartup ? 'fade-out' : ''}`}>
-          <div key={greetingIndex} className="hello-text">
+          <div key={greetingIndex} className="hello-text" style={greetingIndex === greetings.length - 1 ? { animation: 'none', opacity: 1 } : {}}>
             {greetingIndex === greetings.length - 1 ? (
-              <span style={{ fontWeight: 400, letterSpacing: '-0.02em' }}>
-                <span className="font-cursive" style={{ fontSize: '1.2em' }}>Rumii</span>
-                <span style={{ fontSize: '0.85em', fontWeight: 500, letterSpacing: '0.05em' }}>.AI</span>
-              </span>
+              <svg className="handwriting-svg" viewBox="0 0 300 100">
+                {/* Cursive Rumii */}
+                <text x="35%" y="50%" textAnchor="end" dominantBaseline="middle" className="handwriting-text-cursive">
+                  Rumii
+                </text>
+                {/* Sans-serif .AI */}
+                <text x="37%" y="50%" textAnchor="start" dominantBaseline="middle" className="handwriting-text-sans" opacity="0.85">
+                  .AI
+                </text>
+              </svg>
             ) : (
               greetings[greetingIndex]
             )}

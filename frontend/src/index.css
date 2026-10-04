@@ -235,6 +235,42 @@ body {
   }
 }
 
+.handwriting-svg {
+  width: 300px;
+  height: 100px;
+}
+
+.handwriting-text-cursive {
+  font-family: 'Sacramento', cursive;
+  font-size: 3.5rem;
+  font-weight: 400;
+  fill: transparent;
+  stroke: var(--text-primary);
+  stroke-width: 1.5px;
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+  animation: drawHandwriting 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.handwriting-text-sans {
+  font-family: 'Inter', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 600;
+  fill: transparent;
+  stroke: var(--text-primary);
+  stroke-width: 1.5px;
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+  animation: drawHandwriting 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0.3s forwards;
+}
+
+@keyframes drawHandwriting {
+  to {
+    stroke-dashoffset: 0;
+    fill: var(--text-primary);
+  }
+}
+
 /* Selection Toolbar */
 .selection-toolbar {
   position: fixed;
