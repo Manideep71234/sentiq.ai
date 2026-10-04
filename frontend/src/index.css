@@ -306,11 +306,11 @@ h4 {
   font-family: 'Press Start 2P', monospace;
 }
 
-/* Sidebar — Always dark/black regardless of theme */
+/* Sidebar uses CSS variables to match theme */
 .sidebar {
   width: 280px;
-  background: #0a0a0a;
-  border-right: 1px solid rgba(255,255,255,0.08);
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
   display: flex;
   flex-direction: column;
   padding: 1.5rem;
@@ -318,7 +318,7 @@ h4 {
   transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   position: relative;
-  color: #ffffff;
+  color: var(--sidebar-text);
 }
 
 .sidebar nav::-webkit-scrollbar {
