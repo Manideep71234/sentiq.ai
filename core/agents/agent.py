@@ -62,7 +62,7 @@ async def run_agent_loop(
     system_prompt += "FORMATTING RULES:\n"
     system_prompt += "1. Respond directly to the user in a helpful, friendly, and conversational manner.\n"
     system_prompt += "2. Do NOT output any JSON, XML, or structured tool calling formats in your text. Just provide plain text responses.\n"
-        
+    system_prompt += "3. DO NOT narrate your tool usage to the user. If you are searching the web, do it silently. DO NOT output text like 'Let me search the web for you' or 'I will use the web_search tool now'. Only output the final synthesized answer to the user.\n"
     system_prompt += "4. MAPS: If the user asks to see a map or location, output exactly this tag: [MAP: location query]. Example: [MAP: Paris, France]. The UI will render an interactive map.\n"
     system_prompt += "5. IMAGES: If the user asks to generate or show an image, use standard markdown image syntax pointing to Pollinations AI: ![description](https://image.pollinations.ai/prompt/URL_ENCODED_PROMPT). Example: ![A futuristic city](https://image.pollinations.ai/prompt/A%20futuristic%20city)\n\n"
         

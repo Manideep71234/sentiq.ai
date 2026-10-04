@@ -1,4 +1,4 @@
-﻿"""
+"""
 DISCLAIMER: 
 Any shell execution tools or system-level command tools added to this file MUST BE strictly isolated and sandboxed. 
 Rumii.AI is deployed in a live environment, and exposing unrestricted shell access to the LLM agent introduces severe security risks.
@@ -60,7 +60,29 @@ def web_search(query: str, max_results: int = 3) -> str:
     if not search_limiter.check_limit("global"):
         return "Error: Rate limit exceeded for web search. Please wait before searching again."
     try:
-        results = DDGS().text(query, max_results=max_results)
+        results = DDGS().text(query, max_results=max_results, backend="api")
+    except Exception:
+        try:
+            results = DDGS().text(query, max_results=max_results, backend="lite")
+        except Exception:
+            try:
+                results = DDGS().text(query, max_results=max_results, backend="html")
+            except Exception as e:
+                # Final fallback: Wikipedia search API (highly reliable)
+                import httpx
+                wiki_url = f"https://en.wikipedia.org/w/api.php?action=opensearch&search={query}&limit={max_results}&namespace=0&format=json"
+                try:
+                    wiki_res = httpx.get(wiki_url, timeout=5.0).json()
+                    if len(wiki_res) > 3 and wiki_res[1]:
+                        results = []
+                        for i in range(len(wiki_res[1])):
+                            results.append({"title": wiki_res[1][i], "href": wiki_res[3][i], "body": ""})
+                    else:
+                        return "Web search failed: No results found from any provider."
+                except Exception as wiki_err:
+                    return f"Web search failed completely. Providers blocked or unreachable."
+
+    try:
         if not results:
             return "No results found."
         
@@ -88,7 +110,7 @@ def web_search(query: str, max_results: int = 3) -> str:
             
         return "\n".join(formatted)
     except Exception as e:
-        return f"Error performing web search: {str(e)}"
+        return f"Error processing web search results: {str(e)}"
 
 def read_url(url: str) -> str:
     try:
