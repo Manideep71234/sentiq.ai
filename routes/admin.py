@@ -183,3 +183,134 @@ def create_invite(admin: User = Depends(get_admin_user), db: Session = Depends(g
     db.refresh(invite)
     log_event(db, admin.id, "invite_created", {"code": code_str})
     return {"id": invite.id, "code": invite.code}
+
+import json
+from core.models import MCPServerConfig
+from core.security import encrypt_string, decrypt_string
+
+class MCPServerCreate(BaseModel):
+    name: str
+    command: str
+    args: List[str]
+    env_vars: dict
+    enabled: bool = True
+
+class MCPServerResponse(BaseModel):
+    id: int
+    name: str
+    command: str
+    args: List[str]
+    env_vars: dict
+    enabled: bool
+
+@router.get("/mcp-servers", response_model=List[MCPServerResponse])
+def get_mcp_servers(db: Session = Depends(get_session), admin: User = Depends(get_admin_user)):
+    servers = db.exec(select(MCPServerConfig)).all()
+    resp = []
+    for s in servers:
+        env = {}
+        if s.env_vars_encrypted:
+            try:
+                env = json.loads(decrypt_string(s.env_vars_encrypted))
+            except:
+                pass
+        resp.append({
+            "id": s.id,
+            "name": s.name,
+            "command": s.command,
+            "args": json.loads(s.args_json),
+            "env_vars": env,
+            "enabled": s.enabled
+        })
+    return resp
+
+@router.post("/mcp-servers", response_model=MCPServerResponse)
+def create_mcp_server(data: MCPServerCreate, db: Session = Depends(get_session), admin: User = Depends(get_admin_user)):
+    if not data.command:
+        raise HTTPException(400, "Command required")
+        
+    encrypted_env = encrypt_string(json.dumps(data.env_vars)) if data.env_vars else None
+    s = MCPServerConfig(
+        name=data.name,
+        command=data.command,
+        args_json=json.dumps(data.args),
+        env_vars_encrypted=encrypted_env,
+        enabled=data.enabled
+    )
+    db.add(s)
+    db.commit()
+    db.refresh(s)
+    return {
+        "id": s.id,
+        "name": s.name,
+        "command": s.command,
+        "args": data.args,
+        "env_vars": data.env_vars,
+        "enabled": s.enabled
+    }
+
+@router.put("/mcp-servers/{server_id}", response_model=MCPServerResponse)
+def update_mcp_server(server_id: int, data: MCPServerCreate, db: Session = Depends(get_session), admin: User = Depends(get_admin_user)):
+    s = db.get(MCPServerConfig, server_id)
+    if not s:
+        raise HTTPException(404, "Server not found")
+        
+    s.name = data.name
+    s.command = data.command
+    s.args_json = json.dumps(data.args)
+    s.env_vars_encrypted = encrypt_string(json.dumps(data.env_vars)) if data.env_vars else None
+    s.enabled = data.enabled
+    
+    db.add(s)
+    db.commit()
+    return {
+        "id": s.id,
+        "name": s.name,
+        "command": s.command,
+        "args": data.args,
+        "env_vars": data.env_vars,
+        "enabled": s.enabled
+    }
+
+@router.delete("/mcp-servers/{server_id}")
+def delete_mcp_server(server_id: int, db: Session = Depends(get_session), admin: User = Depends(get_admin_user)):
+    s = db.get(MCPServerConfig, server_id)
+    if not s:
+        raise HTTPException(404, "Server not found")
+    db.delete(s)
+    db.commit()
+    return {"status": "ok"}
+
+@router.post("/mcp-servers/test")
+async def test_mcp_server(data: MCPServerCreate, admin: User = Depends(get_admin_user)):
+    from mcp import StdioServerParameters
+    from mcp.client.stdio import stdio_client
+    from mcp import ClientSession
+    from contextlib import AsyncExitStack
+    import os
+    
+    merged_env = os.environ.copy()
+    merged_env.update(data.env_vars)
+    
+    params = StdioServerParameters(
+        command=data.command,
+        args=data.args,
+        env=merged_env
+    )
+    
+    tools = []
+    try:
+        async with AsyncExitStack() as stack:
+            transport = await stack.enter_async_context(stdio_client(params))
+            read, write = transport
+            session = await stack.enter_async_context(ClientSession(read, write))
+            await session.initialize()
+            server_tools = await session.list_tools()
+            for t in server_tools.tools:
+                tools.append({
+                    "name": t.name,
+                    "description": getattr(t, "description", "No description provided.")
+                })
+        return {"status": "ok", "tools": tools}
+    except Exception as e:
+        raise HTTPException(500, f"Failed to connect to MCP server: {str(e)}")

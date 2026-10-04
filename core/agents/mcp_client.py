@@ -5,23 +5,48 @@ from mcp.client.stdio import stdio_client
 
 from contextlib import AsyncExitStack
 
+import json
+from sqlmodel import Session, select
+from core.database import engine
+from core.models import MCPServerConfig
+from core.security import decrypt_string
+import os
+
 class MCPClientManager:
     def __init__(self):
-        self.server_configs = {
-            "workspace-fs": StdioServerParameters(
-                command="python",
-                args=["mcp_servers/fs_server.py"]
-            )
-        }
         self._cached_tools: Optional[List[Dict[str, Any]]] = None
         self.sessions: Dict[str, ClientSession] = {}
         self.exit_stack = AsyncExitStack()
+
+    def _get_server_configs(self):
+        configs = {}
+        with Session(engine) as session:
+            servers = session.exec(select(MCPServerConfig).where(MCPServerConfig.enabled == True)).all()
+            for s in servers:
+                env_vars = {}
+                if s.env_vars_encrypted:
+                    try:
+                        env_vars = json.loads(decrypt_string(s.env_vars_encrypted))
+                    except Exception:
+                        pass
+                
+                # Merge with os.environ so PATH etc is preserved
+                merged_env = os.environ.copy()
+                merged_env.update(env_vars)
+                
+                configs[s.name] = StdioServerParameters(
+                    command=s.command,
+                    args=json.loads(s.args_json),
+                    env=merged_env
+                )
+        return configs
 
     async def _get_or_create_session(self, server_name: str) -> ClientSession:
         if server_name in self.sessions:
             return self.sessions[server_name]
             
-        params = self.server_configs.get(server_name)
+        configs = self._get_server_configs()
+        params = configs.get(server_name)
         if not params:
             raise ValueError(f"Unknown MCP server {server_name}")
             
@@ -38,7 +63,8 @@ class MCPClientManager:
             return self._cached_tools
 
         tools = []
-        for server_name in self.server_configs.keys():
+        configs = self._get_server_configs()
+        for server_name in configs.keys():
             try:
                 session = await self._get_or_create_session(server_name)
                 server_tools = await session.list_tools()

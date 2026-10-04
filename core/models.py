@@ -181,3 +181,12 @@ class TaskResult(SQLModel, table=True):
     scheduled_task_id: int = Field(foreign_key="scheduledtask.id", index=True)
     output: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class MCPServerConfig(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(unique=True, index=True)
+    command: str
+    args_json: str = Field(default="[]")
+    env_vars_encrypted: Optional[str] = None
+    enabled: bool = Field(default=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

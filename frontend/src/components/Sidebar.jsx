@@ -15,6 +15,7 @@ export default function Sidebar({ activeView, setActiveView, user, toggleTheme, 
 
   if (user && user.is_admin) {
     navItems.push({ id: 'admin', icon: Shield, label: 'Admin Panel' });
+    navItems.push({ id: 'mcp-servers', icon: Wand2, label: 'MCP Servers' });
   }
 
   const [chatSessions, setChatSessions] = useState([]);

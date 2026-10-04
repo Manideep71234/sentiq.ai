@@ -11,6 +11,7 @@ import NotesTasksManager from './components/NotesTasksManager';
 import CalendarManager from './components/CalendarManager';
 import SettingsScheduledTasks from './components/SettingsScheduledTasks';
 import SettingsAPIKeys from './components/SettingsAPIKeys';
+import MCPServers from './components/MCPServers';
 import CompareView from './components/CompareView';
 import ProfileView from './components/ProfileView';
 import LoginView from './components/LoginView';
@@ -261,6 +262,9 @@ function App() {
             </div>
             <div style={{ display: activeView === 'admin' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
               <AdminPanel user={user} />
+            </div>
+            <div style={{ display: activeView === 'mcp-servers' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
+              <MCPServers />
             </div>
             <div style={{ display: activeView === 'studio' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
               <StudioView />
